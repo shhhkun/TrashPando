@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "start-react": "cd renderer && npm run dev",
-    "start-electron": "wait-on tcp:5173 && electron .",
-    "start": "concurrently \"npm run start-react\" \"npm run start-electron\""
+    "dev-build": "vite build --watch",
+    "start": "concurrently \"npm run dev-build --prefix renderer\" \"electron .\""
   },
   "keywords": [],
   "author": "",
@@ -14,6 +13,7 @@
   "devDependencies": {
     "concurrently": "^9.2.0",
     "electron": "^37.2.6",
+    "electron-reload": "^2.0.0-alpha.1",
     "wait-on": "^8.0.4"
   }
 }
