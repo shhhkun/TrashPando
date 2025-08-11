@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "dev-build": "vite build --watch",
-    "start": "concurrently \"npm run dev-build --prefix renderer\" \"electron .\""
+    "start": "concurrently \"npm run dev --prefix renderer\" \"wait-on tcp:5173 && electron .\""
   },
   "keywords": [],
   "author": "",
