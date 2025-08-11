@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const isDev = !app.isPackaged;
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -13,7 +14,12 @@ function createWindow() {
     },
   });
 
-  win.loadFile("index.html");
+  if (isDev) {
+    win.loadURL("http://localhost:5173"); // vite dev server
+    win.webContents.openDevTools();
+  } else {
+    win.loadFile(path.join(__dirname, "renderer", "dist", "index.html"));
+  }
 }
 
 // Open folder dialog when renderer asks

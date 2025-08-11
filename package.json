@@ -3,13 +3,17 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start-react": "cd renderer && npm run dev",
+    "start-electron": "wait-on tcp:5173 && electron .",
+    "start": "concurrently \"npm run start-react\" \"npm run start-electron\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "electron": "^37.2.6"
+    "concurrently": "^9.2.0",
+    "electron": "^37.2.6",
+    "wait-on": "^8.0.4"
   }
 }
