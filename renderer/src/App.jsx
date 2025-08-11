@@ -47,7 +47,35 @@ function App() {
       }}
     >
       <h1>Storage Cleaner</h1>
+
+      {/* Select Folder */}
       <button onClick={handleSelectFolder}>Select Folder</button>
+
+      {/* Delete Button */}
+      <button
+        onClick={async () => {
+          if (selectedFiles.size > 0 && folderPath) {
+            const pathsToDelete = Array.from(selectedFiles).map(
+              (name) => `${folderPath}/${name}`
+            );
+            const result = await window.electronAPI.deleteFiles(pathsToDelete);
+            if (result.success) {
+              const updatedFiles = files.filter(
+                (f) => !selectedFiles.has(f.name)
+              );
+              setFiles(updatedFiles);
+              setSelectedFiles(new Set());
+            } else {
+              alert("Error deleting files: " + result.error);
+            }
+          }
+        }}
+        disabled={selectedFiles.size === 0}
+      >
+        Delete Selected
+      </button>
+
+      {/* Folder Contents */}
       <div style={{ marginTop: 20, fontStyle: "italic" }}>
         {folderPath || "No folder selected"}
       </div>

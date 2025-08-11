@@ -57,6 +57,25 @@ ipcMain.handle("scan-folder", async (event, folderPath) => {
   }
 });
 
+// Handle file deletion
+ipcMain.handle("delete-files", async (event, filePaths) => {
+  try {
+    for (const filePath of filePaths) {
+      if (fs.existsSync(filePath)) {
+        const stats = fs.statSync(filePath);
+        if (stats.isDirectory()) {
+          fs.rmSync(filePath, { recursive: true, force: true }); // delete folder & contents
+        } else {
+          fs.unlinkSync(filePath); // delete singular file
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error deleting file(s):", err);
+    return { success: false, error: err.message };
+  }
+});
+
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
