@@ -70,6 +70,7 @@ ipcMain.handle("delete-files", async (event, filePaths) => {
         }
       }
     }
+    return { success: true };
   } catch (err) {
     console.error("Error deleting file(s):", err);
     return { success: false, error: err.message };

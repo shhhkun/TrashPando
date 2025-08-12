@@ -1,23 +1,26 @@
-import { useState } from "react";
+import { useState } from 'react';
+import FileList from './components/FileList';
+import ConfirmDeleteModal from './components/ConfirmDeleteModal';
+import Toast from './components/Toast';
 
 const pandaGreen = "rgb(76, 175, 80)"; // fresh green border for selected
 const darkGrey = "rgb(34, 34, 34)"; // main bg color (dark grey)
 const hoverDarkGrey = "rgb(54, 54, 54)"; // hover bg color (lighter dark grey)
-const lightText = "rgb(230, 230, 230)"; // text color (light)
+const lightText = "rgba(230, 230, 230, 1)"; // text color (light)
 
 function App() {
   const [folderPath, setFolderPath] = useState(null);
   const [files, setFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState(new Set());
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [toastMsg, setToastMsg] = useState(null);
+  const [toastType, setToastType] = useState('info');
 
   function toggleSelectFile(fileName) {
-    setSelectedFiles((prevSelected) => {
-      const newSelected = new Set(prevSelected);
-      if (newSelected.has(fileName)) {
-        newSelected.delete(fileName);
-      } else {
-        newSelected.add(fileName);
-      }
+    setSelectedFiles(prev => {
+      const newSelected = new Set(prev);
+      if (newSelected.has(fileName)) newSelected.delete(fileName);
+      else newSelected.add(fileName);
       return newSelected;
     });
   }
@@ -33,6 +36,24 @@ function App() {
       setFiles([]);
       setSelectedFiles(new Set());
     }
+  }
+
+  async function confirmDelete() {
+    setShowConfirm(false);
+    const pathsToDelete = Array.from(selectedFiles).map(name => `${folderPath}/${name}`);
+    const result = await window.electronAPI.deleteFiles(pathsToDelete);
+
+    if (result.success) {
+      setToastMsg(`Deleted ${selectedFiles.size} file${selectedFiles.size > 1 ? 's' : ''}`);
+      setToastType('info');
+      setFiles(files.filter(f => !selectedFiles.has(f.name)));
+      setSelectedFiles(new Set());
+    } else {
+      setToastMsg(`Error deleting files: ${result.error}`);
+      setToastType('error');
+    }
+
+    setTimeout(() => setToastMsg(null), 3000); // auto dismiss toast
   }
 
   return (
@@ -53,24 +74,9 @@ function App() {
 
       {/* Delete Button */}
       <button
-        onClick={async () => {
-          if (selectedFiles.size > 0 && folderPath) {
-            const pathsToDelete = Array.from(selectedFiles).map(
-              (name) => `${folderPath}/${name}`
-            );
-            const result = await window.electronAPI.deleteFiles(pathsToDelete);
-            if (result.success) {
-              const updatedFiles = files.filter(
-                (f) => !selectedFiles.has(f.name)
-              );
-              setFiles(updatedFiles);
-              setSelectedFiles(new Set());
-            } else {
-              alert("Error deleting files: " + result.error);
-            }
-          }
-        }}
+        onClick={() => setShowConfirm(true)}
         disabled={selectedFiles.size === 0}
+        style={{ marginLeft: 10 }}
       >
         Delete Selected
       </button>
@@ -79,50 +85,30 @@ function App() {
       <div style={{ marginTop: 20, fontStyle: "italic" }}>
         {folderPath || "No folder selected"}
       </div>
-      <div
-        style={{
-          marginTop: 10,
-          maxHeight: 300,
-          overflowY: "auto",
-          border: "1px solid #555",
-          backgroundColor: darkGrey,
-        }}
-      >
-        {files.length === 0 && (
-          <div style={{ padding: 10 }}>No files to display</div>
-        )}
-        {files.map((file) => {
-          const isSelected = selectedFiles.has(file.name);
-          return (
-            <div
-              key={file.name}
-              onClick={() => toggleSelectFile(file.name)}
-              style={{
-                padding: "6px 8px",
-                cursor: "pointer",
-                backgroundColor: isSelected ? darkGrey : darkGrey,
-                borderLeft: isSelected
-                  ? `6px solid ${pandaGreen}`
-                  : "6px solid transparent",
-                userSelect: "none",
-                transition: "background-color 0.2s ease",
-                color: lightText,
-              }}
-              onMouseEnter={(e) => {
-                if (!isSelected)
-                  e.currentTarget.style.backgroundColor = hoverDarkGrey;
-              }}
-              onMouseLeave={(e) => {
-                if (!isSelected)
-                  e.currentTarget.style.backgroundColor = darkGrey;
-              }}
-            >
-              {file.name} - {file.size} bytes -{" "}
-              {file.isDirectory ? "Folder" : "File"}
-            </div>
-          );
-        })}
-      </div>
+
+      <FileList
+        files={files}
+        selectedFiles={selectedFiles}
+        toggleSelectFile={toggleSelectFile}
+        pandaGreen={pandaGreen}
+        darkGrey={darkGrey}
+        hoverDarkGrey={hoverDarkGrey}
+        lightText={lightText}
+      />
+
+      {/* Confirm Delete Form/Modal */}
+      <ConfirmDeleteModal
+        visible={showConfirm}
+        count={selectedFiles.size}
+        onConfirm={confirmDelete}
+        onCancel={() => setShowConfirm(false)}
+      />
+
+      <Toast
+        message={toastMsg}
+        type={toastType}
+        onClose={() => setToastMsg(null)}
+      />
     </div>
   );
 }
