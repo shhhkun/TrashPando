@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import FileList from './components/FileList';
-import ConfirmDeleteModal from './components/ConfirmDeleteModal';
-import Toast from './components/Toast';
+import { useState } from "react";
+import FileList from "./components/FileList";
+import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
+import Toast from "./components/Toast";
 
 const pandaGreen = "rgb(76, 175, 80)"; // fresh green border for selected
 const darkGrey = "rgb(34, 34, 34)"; // main bg color (dark grey)
@@ -14,10 +14,10 @@ function App() {
   const [selectedFiles, setSelectedFiles] = useState(new Set());
   const [showConfirm, setShowConfirm] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
-  const [toastType, setToastType] = useState('info');
+  const [toastType, setToastType] = useState("info");
 
   function toggleSelectFile(fileName) {
-    setSelectedFiles(prev => {
+    setSelectedFiles((prev) => {
       const newSelected = new Set(prev);
       if (newSelected.has(fileName)) newSelected.delete(fileName);
       else newSelected.add(fileName);
@@ -40,17 +40,21 @@ function App() {
 
   async function confirmDelete() {
     setShowConfirm(false);
-    const pathsToDelete = Array.from(selectedFiles).map(name => `${folderPath}/${name}`);
+    const pathsToDelete = Array.from(selectedFiles).map(
+      (name) => `${folderPath}/${name}`
+    );
     const result = await window.electronAPI.deleteFiles(pathsToDelete);
 
     if (result.success) {
-      setToastMsg(`Deleted ${selectedFiles.size} file${selectedFiles.size > 1 ? 's' : ''}`);
-      setToastType('info');
-      setFiles(files.filter(f => !selectedFiles.has(f.name)));
+      setToastMsg(
+        `Deleted ${selectedFiles.size} file${selectedFiles.size > 1 ? "s" : ""}`
+      );
+      setToastType("info");
+      setFiles(files.filter((f) => !selectedFiles.has(f.name)));
       setSelectedFiles(new Set());
     } else {
       setToastMsg(`Error deleting files: ${result.error}`);
-      setToastType('error');
+      setToastType("error");
     }
 
     setTimeout(() => setToastMsg(null), 3000); // auto dismiss toast
@@ -65,21 +69,27 @@ function App() {
         color: lightText,
         height: "100vh",
         boxSizing: "border-box",
+
+        display: "flex", // make container a flexbox
+        flexDirection: "column", // stack children vertically
+        alignItems: "center", // center horizontally
       }}
     >
       <h1>Storage Cleaner</h1>
 
-      {/* Select Folder */}
-      <button onClick={handleSelectFolder}>Select Folder</button>
+      <div style={{ display: "flex", gap: "10px" }}>
+        {/* Select Folder */}
+        <button onClick={handleSelectFolder}>Select Folder</button>
 
-      {/* Delete Button */}
-      <button
-        onClick={() => setShowConfirm(true)}
-        disabled={selectedFiles.size === 0}
-        style={{ marginLeft: 10 }}
-      >
-        Delete Selected
-      </button>
+        {/* Delete Button */}
+        <button
+          onClick={() => setShowConfirm(true)}
+          disabled={selectedFiles.size === 0}
+          style={{ marginLeft: 10 }}
+        >
+          Delete Selected
+        </button>
+      </div>
 
       {/* Folder Contents */}
       <div style={{ marginTop: 20, fontStyle: "italic" }}>
@@ -89,6 +99,7 @@ function App() {
       <FileList
         files={files}
         selectedFiles={selectedFiles}
+        setSelectedFiles={setSelectedFiles}
         toggleSelectFile={toggleSelectFile}
         pandaGreen={pandaGreen}
         darkGrey={darkGrey}
