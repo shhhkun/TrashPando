@@ -2,8 +2,8 @@ const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const isDev = !app.isPackaged;
-require('electron-reload')(__dirname, {
-  electron: path.join(__dirname, 'node_modules', '.bin', 'electron'),
+require("electron-reload")(__dirname, {
+  electron: path.join(__dirname, "node_modules", ".bin", "electron"),
 });
 
 function createWindow() {
@@ -40,7 +40,7 @@ ipcMain.handle("scan-folder", async (event, folderPath) => {
   try {
     const files = fs.readdirSync(folderPath); // files in folder
 
-    return files.map(file => {
+    return files.map((file) => {
       const fullPath = path.join(folderPath, file);
       const stats = fs.statSync(fullPath); // get file details
 
@@ -48,17 +48,18 @@ ipcMain.handle("scan-folder", async (event, folderPath) => {
         name: file,
         size: stats.size, // byte size
         isDirectory: stats.isDirectory(),
-        modified: stats.mtime // last modified date
+        modified: stats.mtime, // last modified date
       };
     });
   } catch (err) {
-    console.error('Error scanning folder:', err);
+    console.error("Error scanning folder:", err);
     return [];
   }
 });
 
 // Handle file deletion
 ipcMain.handle("delete-files", async (event, filePaths) => {
+  console.log("Delete request paths:", filePaths);
   try {
     for (const filePath of filePaths) {
       if (fs.existsSync(filePath)) {
@@ -75,6 +76,11 @@ ipcMain.handle("delete-files", async (event, filePaths) => {
     console.error("Error deleting file(s):", err);
     return { success: false, error: err.message };
   }
+});
+
+// Path separator for cross-platform compatibility
+ipcMain.handle("get-path-sep", () => {
+  return path.sep;
 });
 
 app.whenReady().then(createWindow);

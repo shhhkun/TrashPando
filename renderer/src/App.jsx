@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Selecto from "react-selecto";
+import path from "path";
 import FileList from "./components/FileList";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import Toast from "./components/Toast";
@@ -18,6 +19,16 @@ function App() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
   const [toastType, setToastType] = useState("info");
+  const [filesToDelete, setFilesToDelete] = useState([]); // snapshot of files to delete
+  const [pathSeparator, setPathSeparator] = useState("/"); // default
+
+  useEffect(() => {
+    async function fetchSeparator() {
+      const sep = await window.electronAPI.getPathSeparator();
+      setPathSeparator(sep);
+    }
+    fetchSeparator();
+  }, []);
 
   function toggleSelectFile(fileName) {
     setSelectedFiles((prev) => {
@@ -43,20 +54,37 @@ function App() {
 
   async function confirmDelete() {
     setShowConfirm(false);
-    const pathsToDelete = Array.from(selectedFiles).map(
-      (name) => `${folderPath}/${name}`
-    );
-    const result = await window.electronAPI.deleteFiles(pathsToDelete);
 
-    if (result.success) {
-      setToastMsg(
-        `Deleted ${selectedFiles.size} file${selectedFiles.size > 1 ? "s" : ""}`
-      );
-      setToastType("info");
-      setFiles(files.filter((f) => !selectedFiles.has(f.name)));
-      setSelectedFiles(new Set());
-    } else {
-      setToastMsg(`Error deleting files: ${result.error}`);
+    // ensure proper file paths for OS
+    const pathsToDelete = filesToDelete.map((name) =>
+      folderPath.endsWith(pathSeparator)
+        ? `${folderPath}${name}`
+        : `${folderPath}${pathSeparator}${name}`
+    );
+
+    console.log("Selected files:", filesToDelete);
+    console.log("Folder path:", folderPath);
+    console.log("Paths to delete:", pathsToDelete);
+
+    try {
+      const result = await window.electronAPI.deleteFiles(pathsToDelete);
+
+      if (result.success) {
+        const deletedCount = filesToDelete.length;
+        setToastMsg(
+          `Deleted ${deletedCount} file${deletedCount > 1 ? "s" : ""}`
+        );
+        setToastType("info");
+
+        // update UI to remove deleted files
+        setFiles((prev) => prev.filter((f) => !filesToDelete.includes(f.name)));
+        setSelectedFiles(new Set());
+      } else {
+        setToastMsg(`Error deleting files: ${result.error}`);
+        setToastType("error");
+      }
+    } catch (err) {
+      setToastMsg(`Unexpected error: ${err.message}`);
       setToastType("error");
     }
 
@@ -89,7 +117,10 @@ function App() {
         {/* Delete Button */}
         <button
           className="no-drag"
-          onClick={() => setShowConfirm(true)}
+          onClick={() => {
+            setFilesToDelete(Array.from(selectedFiles));
+            setShowConfirm(true);
+          }}
           disabled={selectedFiles.size === 0}
           style={{ marginLeft: 10 }}
         >
