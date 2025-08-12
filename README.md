@@ -62,9 +62,9 @@ npm start
 - Show the folder paths included files as well as their metadata (filename, size, filetype)
 
 ### **Upcoming v1.0**
-- Add file deletion
-- Support multi-file selection, delete confirmation modal, and toast popup messages
-- Implement drag and select/drop
+- Added file deletion
+- Supports multi-file selection, delete confirmation modal, and toast popup messages for number of files removed
+- Implemented drag and select for multiple file selection
 - File recovery?
 
 ---
@@ -81,6 +81,7 @@ npm start
 ---
 
 ## Known Issues
+- Path separator fetching is a bit unoptimized, check/look into preload.js loading properly as to use electronAPI calls rather than state & useEffect
 
 ---
 
