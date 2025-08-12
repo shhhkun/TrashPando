@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Selecto from "react-selecto";
 import FileList from "./components/FileList";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import Toast from "./components/Toast";
@@ -99,12 +100,24 @@ function App() {
       <FileList
         files={files}
         selectedFiles={selectedFiles}
-        setSelectedFiles={setSelectedFiles}
+        //setSelectedFiles={setSelectedFiles}
         toggleSelectFile={toggleSelectFile}
         pandaGreen={pandaGreen}
         darkGrey={darkGrey}
         hoverDarkGrey={hoverDarkGrey}
         lightText={lightText}
+      />
+
+      <Selecto
+        container={document.body}
+        selectableTargets={[".file-item"]}
+        hitRate={0}
+        selectByClick={true}
+        selectFromInside={true}
+        onSelect={(e) => {
+          const selectedNames = e.selected.map((el) => el.dataset.name);
+          setSelectedFiles(new Set(selectedNames));
+        }}
       />
 
       {/* Confirm Delete Form/Modal */}
