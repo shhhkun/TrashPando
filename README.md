@@ -1,7 +1,7 @@
-# TrashPando — A Smart Desktop Storage Cleaner
+# Trashu — A Smart Desktop Storage Cleaner
 
 ## Overview  
-TrashPando is a desktop app built with Electron that helps users clean up their storage by finding duplicate, unused, or forgotten files. With plans to integrate smart metrics like last access time and usage frequency, TrashPando aims to make disk cleanup simple and efficient.
+Trashu is a desktop app built with Electron that helps users clean up their storage by finding duplicate, unused, or forgotten files. With plans to integrate smart metrics like last access time and usage frequency, which aims to make disk cleanup simple and efficient.
 
 *Built with: Electron, Node.js, React, Vite, JavaScript, Tailwind CSS*
 
@@ -30,11 +30,11 @@ TrashPando is a desktop app built with Electron that helps users clean up their 
 
 Clone the repo:  
 ```bash
-git clone https://github.com/yourusername/TrashPando.git
+git clone https://github.com/yourusername/Trashu.git
 ```
 Navigate into the folder:
 ```bash
-cd TrashPando
+cd Trashu
 ```
 
 Install dependencies:

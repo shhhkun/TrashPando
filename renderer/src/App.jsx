@@ -106,7 +106,7 @@ function App() {
         alignItems: "center", // center horizontally
       }}
     >
-      <h1>Storage Cleaner</h1>
+      <h1>Trashu🐼</h1>
 
       <div style={{ display: "flex", gap: "10px" }}>
         {/* Select Folder */}
