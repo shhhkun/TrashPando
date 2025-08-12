@@ -6,9 +6,11 @@ export default function FileList({
   darkGrey,
   hoverDarkGrey,
   lightText,
+  listRef,
 }) {
   return (
     <div
+      ref={listRef}
       style={{
         marginTop: 10,
         maxHeight: 700,

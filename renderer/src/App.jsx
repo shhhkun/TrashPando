@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Selecto from "react-selecto";
 import FileList from "./components/FileList";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
@@ -10,6 +10,8 @@ const hoverDarkGrey = "rgb(54, 54, 54)"; // hover bg color (lighter dark grey)
 const lightText = "rgba(230, 230, 230, 1)"; // text color (light)
 
 function App() {
+  const fileListRef = useRef(null);
+
   const [folderPath, setFolderPath] = useState(null);
   const [files, setFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState(new Set());
@@ -69,9 +71,9 @@ function App() {
         backgroundColor: darkGrey,
         color: lightText,
         height: "100vh",
+        width: "100vw",
         boxSizing: "border-box",
-
-        display: "flex", // make container a flexbox
+        display: "flex",
         flexDirection: "column", // stack children vertically
         alignItems: "center", // center horizontally
       }}
@@ -80,10 +82,13 @@ function App() {
 
       <div style={{ display: "flex", gap: "10px" }}>
         {/* Select Folder */}
-        <button onClick={handleSelectFolder}>Select Folder</button>
+        <button className="no-drag" onClick={handleSelectFolder}>
+          Select Folder
+        </button>
 
         {/* Delete Button */}
         <button
+          className="no-drag"
           onClick={() => setShowConfirm(true)}
           disabled={selectedFiles.size === 0}
           style={{ marginLeft: 10 }}
@@ -100,20 +105,26 @@ function App() {
       <FileList
         files={files}
         selectedFiles={selectedFiles}
-        //setSelectedFiles={setSelectedFiles}
         toggleSelectFile={toggleSelectFile}
         pandaGreen={pandaGreen}
         darkGrey={darkGrey}
         hoverDarkGrey={hoverDarkGrey}
         lightText={lightText}
+        listRef={fileListRef} // pass ref
       />
 
       <Selecto
         container={document.body}
+        dragContainer={fileListRef.current} // restrict drag area
         selectableTargets={[".file-item"]}
         hitRate={0}
         selectByClick={true}
         selectFromInside={true}
+        onDragStart={(e) => {
+          if (e.inputEvent.target.closest(".no-drag")) {
+            e.stop(); // prevent drag if clicking on buttons
+          }
+        }}
         onSelect={(e) => {
           const selectedNames = e.selected.map((el) => el.dataset.name);
           setSelectedFiles(new Set(selectedNames));
