@@ -3,7 +3,7 @@
 ## Overview  
 TrashPando is a desktop app built with Electron that helps users clean up their storage by finding duplicate, unused, or forgotten files. With plans to integrate smart metrics like last access time and usage frequency, TrashPando aims to make disk cleanup simple and efficient.
 
-*Built with: Electron, Node.js, JavaScript*
+*Built with: Electron, Node.js, React, Vite, JavaScript, Tailwind CSS*
 
 ---
 
@@ -59,17 +59,24 @@ npm start
 - Electron app initialized with a window and basic UI
 - Folder selection implemented
 - Display selected folder path
+- Show the folder paths included files as well as their metadata (filename, size, filetype)
+
+### **Upcoming v1.0**
+- Add file deletion
+- Support multi-file selection, delete confirmation modal, and toast popup messages
+- Implement drag and select/drop
+- File recovery?
 
 ---
 
 ## Roadmap
-- Implement file scanning and metadata collection
-- Duplicate detection improvements
-- Smart metrics integration (last access time, usage frequency)
-- File previews and sorting/filtering options
-- Undo button for last delete action/safety net
-- Packaged installers for Windows/macOS
-- Panda themed UI
+- [x] Implement basic file scanning and metadata collection
+- [ ] File previews and sorting/filtering options
+- [ ] Undo button for last delete action/safety net
+- [ ] Duplicate detection & improve metadata collection
+- [ ] Smart metrics integration (last access time, usage frequency)
+- [ ] Packaged installers for Windows/macOS
+- [ ] Panda themed UI (big UI overhaul once core features are implemented and thoroughly tested)
 
 ---
 
