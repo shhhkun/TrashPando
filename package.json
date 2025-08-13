@@ -16,6 +16,7 @@
     "wait-on": "^8.0.4"
   },
   "dependencies": {
+    "react-icons": "^5.5.0",
     "react-selecto": "^1.26.3"
   }
 }

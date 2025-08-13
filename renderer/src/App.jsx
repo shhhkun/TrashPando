@@ -41,6 +41,12 @@ function App() {
   }, []);
 
   function toggleSelectFile(fileName) {
+    const clickedFile = files.find((f) => f.name === fileName);
+
+    if (clickedFile?.isDirectory && clickedFile?.isEmptyFolder === false) {
+      return; // ignore selection
+    }
+
     setSelectedFiles((prev) => {
       const newSelected = new Set(prev);
       if (newSelected.has(fileName)) newSelected.delete(fileName);
@@ -64,6 +70,21 @@ function App() {
 
   async function confirmDelete() {
     setShowConfirm(false);
+
+    // filter out non-empty folders before deleting
+    const filteredToDelete = filesToDelete.filter((fileName) => {
+      const file = files.find((f) => f.name === fileName);
+      // allow deleting if not folder or empty folder
+      return !(file.isDirectory && file.isEmptyFolder === false);
+    });
+
+    // if nothing left to delete, notify and abort
+    if (filteredToDelete.length === 0) {
+      setToastMsg("No deletable files selected.");
+      setToastType("info");
+      setTimeout(() => setToastMsg(null), 3000);
+      return;
+    }
 
     // ensure proper file paths for OS
     const pathsToDelete = filesToDelete.map((name) =>
@@ -167,11 +188,17 @@ function App() {
         files={files}
         selectedFiles={selectedFiles}
         toggleSelectFile={toggleSelectFile}
-        //pandaGreen={pandaGreen}
-        //darkGrey={darkGrey}
-        //hoverDarkGrey={hoverDarkGrey}
-        //lightText={lightText}
         listRef={fileListRef} // pass ref
+        onOpenFolder={async (folderName) => {
+          const newPath = folderPath.endsWith(pathSeparator)
+            ? `${folderPath}${folderName}`
+            : `${folderPath}${pathSeparator}${folderName}`;
+
+          const scannedFiles = await window.electronAPI.scanFolder(newPath);
+          setFolderPath(newPath);
+          setFiles(scannedFiles);
+          setSelectedFiles(new Set());
+        }}
       />
 
       <Selecto
@@ -187,7 +214,12 @@ function App() {
           }
         }}
         onSelect={(e) => {
-          const selectedNames = e.selected.map((el) => el.dataset.name);
+          const selectedNames = e.selected
+            .map((el) => el.dataset.name)
+            .filter((name) => {
+              const file = files.find((f) => f.name === name);
+              return file && !file.isDirectory; // only select files, not folders
+            });
           setSelectedFiles(new Set(selectedNames));
         }}
       />

@@ -38,19 +38,40 @@ ipcMain.handle("scan-folder", async (event, folderPath) => {
   if (!folderPath) return [];
 
   try {
-    const files = fs.readdirSync(folderPath); // files in folder
+    const files = fs.readdirSync(folderPath);
 
-    return files.map((file) => {
-      const fullPath = path.join(folderPath, file);
-      const stats = fs.statSync(fullPath); // get file details
+    const result = files.map((file) => {
+      try {
+        if (file.toLowerCase() === "desktop.ini") return null; // ignore desktop.ini (may not be present on all systems?)
 
-      return {
-        name: file,
-        size: stats.size, // byte size
-        isDirectory: stats.isDirectory(),
-        modified: stats.mtime, // last modified date
-      };
+        const fullPath = path.join(folderPath, file);
+        const stats = fs.statSync(fullPath);
+
+        let isEmptyFolder = false;
+        if (stats.isDirectory()) {
+          try {
+            const innerFiles = fs
+              .readdirSync(fullPath)
+              .filter((f) => f.toLowerCase() !== "desktop.ini");
+            isEmptyFolder = innerFiles.length === 0;
+          } catch {
+            isEmptyFolder = false; // cannot access folder, mark it as non-empty to prevent deletion
+          }
+        }
+
+        return {
+          name: file,
+          size: stats.size,
+          isDirectory: stats.isDirectory(),
+          modified: stats.mtime,
+          isEmptyFolder,
+        };
+      } catch {
+        return null; // skip files/folders we cannot access
+      }
     });
+
+    return result.filter(Boolean); // remove nulls
   } catch (err) {
     console.error("Error scanning folder:", err);
     return [];

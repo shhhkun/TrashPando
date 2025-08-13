@@ -60,3 +60,16 @@
 .file-item.selected:hover {
   background-color: rgba(76, 175, 80, 0.2); /* slightly brighter on hover */
 }
+
+.file-item.disabled {
+  background-color: #555; /* greyed out */
+  cursor: not-allowed;
+}
+.file-item .open-btn {
+  margin-left: auto;
+  padding-left: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: #aaf;
+}
+

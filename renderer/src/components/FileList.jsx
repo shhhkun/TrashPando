@@ -5,18 +5,16 @@ export default function FileList({
   selectedFiles,
   toggleSelectFile,
   listRef,
+  onOpenFolder
 }) {
   return (
-    <div
-      ref={listRef}
-      className="file-list-container"
-    >
+    <div ref={listRef} className="file-list-container">
       {/* Header bar with vertical separators */}
       <div className="file-list-header">
         <div>Name</div>
         <div>Date Modified</div>
-        <div>Type</div>
         <div>Size</div>
+        <div>Type</div>
       </div>
 
       {/* Files list */}
@@ -25,17 +23,35 @@ export default function FileList({
       ) : (
         files.map((file) => {
           const isSelected = selectedFiles.has(file.name);
+
           return (
             <div
               key={file.name}
-              className={`file-item ${isSelected ? "selected" : ""}`}
+              className={`file-item ${isSelected ? "selected" : ""} ${
+                file.isDirectory && !file.isEmptyFolder ? "disabled" : ""
+              }`}
               data-name={file.name}
-              onClick={() => toggleSelectFile(file.name)}
+              onClick={() => {
+                if (!(file.isDirectory && !file.isEmptyFolder)) {
+                  toggleSelectFile(file.name);
+                }
+              }}
             >
               <div>{file.name}</div>
               <div>{new Date(file.modified).toLocaleDateString()}</div>
-              <div>{file.isDirectory ? "Folder" : "File"}</div>
               <div>{file.size.toLocaleString()} bytes</div>
+              <div>{file.isDirectory ? "Folder" : "File"}</div>
+              {file.isDirectory && (
+                <span
+                  className="open-btn"
+                  onClick={(e) => {
+                    e.stopPropagation(); // prevent row selection
+                    onOpenFolder(file.name);
+                  }}
+                >
+                  [Open]
+                </span>
+              )}
             </div>
           );
         })
