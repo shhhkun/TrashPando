@@ -167,10 +167,10 @@ function App() {
         files={files}
         selectedFiles={selectedFiles}
         toggleSelectFile={toggleSelectFile}
-        pandaGreen={pandaGreen}
-        darkGrey={darkGrey}
-        hoverDarkGrey={hoverDarkGrey}
-        lightText={lightText}
+        //pandaGreen={pandaGreen}
+        //darkGrey={darkGrey}
+        //hoverDarkGrey={hoverDarkGrey}
+        //lightText={lightText}
         listRef={fileListRef} // pass ref
       />
 

@@ -1,0 +1,62 @@
+.file-list-container {
+  margin-top: 10px;
+  max-height: 700px;
+  width: 50vw;
+  max-width: 800px;
+  overflow-y: auto;
+  border-top: 1px solid #555;
+  background-color: var(--darkGrey);
+  position: relative; /* needed for Selecto positioning */
+  user-select: none;
+  font-size: 0.9rem;
+}
+
+.file-list-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  border-bottom: 1px solid #555;
+  padding: 6px 8px;
+  font-weight: bold;
+  color: var(--lightText);
+  column-gap: 12px;
+}
+
+.file-list-header > div {
+  border-right: 1px solid #555;
+  padding-right: 8px;
+}
+
+.file-list-header > div:last-child {
+  border-right: none;
+}
+
+.file-list-empty {
+  padding: 10px;
+  color: var(--lightText);
+}
+
+.file-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  align-items: center;
+  column-gap: 12px;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-left: 6px solid transparent;
+  color: var(--lightText);
+  background-color: var(--darkGrey);
+  transition: background-color 0.15s ease;
+}
+
+.file-item:hover {
+  background-color: var(--hoverDarkGrey);
+}
+
+.file-item.selected {
+  background-color: rgba(76, 175, 80, 0.15);
+  border-left-color: var(--pandaGreen);
+}
+
+.file-item.selected:hover {
+  background-color: rgba(76, 175, 80, 0.2); /* slightly brighter on hover */
+}
