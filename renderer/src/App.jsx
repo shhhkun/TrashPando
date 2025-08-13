@@ -30,6 +30,16 @@ function App() {
     fetchSeparator();
   }, []);
 
+  const [commonFolders, setCommonFolders] = useState({}); // fetch common folder paths
+
+  useEffect(() => {
+    async function fetchCommonFolders() {
+      const folders = await window.electronAPI.getCommonFolders();
+      setCommonFolders(folders);
+    }
+    fetchCommonFolders();
+  }, []);
+
   function toggleSelectFile(fileName) {
     setSelectedFiles((prev) => {
       const newSelected = new Set(prev);
@@ -126,6 +136,26 @@ function App() {
         >
           Delete Selected
         </button>
+      </div>
+
+      {/* Common Folders Buttons */}
+      <div
+        style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}
+      >
+        {Object.entries(commonFolders).map(([key, folder]) => (
+          <button
+            key={key}
+            className="no-drag"
+            onClick={async () => {
+              setFolderPath(folder);
+              const scannedFiles = await window.electronAPI.scanFolder(folder);
+              setFiles(scannedFiles);
+              setSelectedFiles(new Set());
+            }}
+          >
+            {key.charAt(0).toUpperCase() + key.slice(1)}
+          </button>
+        ))}
       </div>
 
       {/* Folder Contents */}

@@ -83,6 +83,18 @@ ipcMain.handle("get-path-sep", () => {
   return path.sep;
 });
 
+// Get common OS folders (may add more as needed)
+ipcMain.handle("get-common-folders", () => {
+  return {
+    documents: app.getPath("documents"),
+    downloads: app.getPath("downloads"),
+    pictures: app.getPath("pictures"),
+    desktop: app.getPath("desktop"),
+    music: app.getPath("music"),
+    videos: app.getPath("videos"),
+  };
+});
+
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
