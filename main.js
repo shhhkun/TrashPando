@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const isDev = !app.isPackaged;
@@ -80,21 +80,16 @@ ipcMain.handle("scan-folder", async (event, folderPath) => {
 
 // Handle file deletion
 ipcMain.handle("delete-files", async (event, filePaths) => {
-  console.log("Delete request paths:", filePaths);
+  console.log("Trash (delete) request paths:", filePaths);
   try {
     for (const filePath of filePaths) {
       if (fs.existsSync(filePath)) {
-        const stats = fs.statSync(filePath);
-        if (stats.isDirectory()) {
-          fs.rmSync(filePath, { recursive: true, force: true }); // delete folder & contents
-        } else {
-          fs.unlinkSync(filePath); // delete singular file
-        }
+        await shell.trashItem(filePath); // move to trash; cross-platform
       }
     }
     return { success: true };
   } catch (err) {
-    console.error("Error deleting file(s):", err);
+    console.error("Error trashing file(s):", err);
     return { success: false, error: err.message };
   }
 });
