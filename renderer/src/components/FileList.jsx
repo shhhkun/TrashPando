@@ -5,7 +5,7 @@ export default function FileList({
   selectedFiles,
   toggleSelectFile,
   listRef,
-  onOpenFolder
+  onOpenFolder,
 }) {
   return (
     <div ref={listRef} className="file-list-container">
@@ -40,18 +40,26 @@ export default function FileList({
               <div>{file.name}</div>
               <div>{new Date(file.modified).toLocaleDateString()}</div>
               <div>{file.size.toLocaleString()} bytes</div>
-              <div>{file.isDirectory ? "Folder" : "File"}</div>
-              {file.isDirectory && (
-                <span
-                  className="open-btn"
-                  onClick={(e) => {
-                    e.stopPropagation(); // prevent row selection
-                    onOpenFolder(file.name);
-                  }}
-                >
-                  [Open]
-                </span>
-              )}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span>{file.isDirectory ? "Folder" : "File"}</span>
+                {file.isDirectory && (
+                  <span
+                    className="open-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenFolder(file.name);
+                    }}
+                  >
+                    [Open]
+                  </span>
+                )}
+              </div>
             </div>
           );
         })

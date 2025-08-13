@@ -1,3 +1,10 @@
+:root {
+  --pandaGreen: rgb(76, 175, 80);
+  --darkGrey: rgb(34, 34, 34);
+  --hoverDarkGrey: rgb(54, 54, 54);
+  --lightText: rgba(230, 230, 230, 1);
+}
+
 .file-list-container {
   margin-top: 10px;
   max-height: 700px;
@@ -62,14 +69,13 @@
 }
 
 .file-item.disabled {
-  background-color: #555; /* greyed out */
+  background-color: rgb(105, 52, 52);
   cursor: not-allowed;
 }
 .file-item .open-btn {
-  margin-left: auto;
+  justify-self: end;
   padding-left: 8px;
   font-size: 0.8rem;
   cursor: pointer;
-  color: #aaf;
+  color: var(--pandaGreen);
 }
-
