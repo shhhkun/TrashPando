@@ -4,6 +4,7 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
   const containerRef = useRef(null);
   const selectionRef = useRef(null);
   const animationFrameRef = useRef();
+  const rafRef = useRef(null);
 
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isSelecting, setIsSelecting] = useState(false);
@@ -14,12 +15,16 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
   const selectedIdsRef = useRef(selectedIds);
   selectedIdsRef.current = selectedIds;
 
-  const dragStartSelectionRef = useRef(new Set());
+  const lastMouseEventRef = useRef(null);
+
+  const dragStartSelectionRef = useRef(new Set()); // snapshot of selection at drag start (ctrl+ drag appends to this)
+  const dragAccumulatedRef = useRef(new Set()); // accumulated selection during drag (persist across scrolling)
+  const isSelectingRef = useRef(false);
 
   // tell parent when selection changes
   useEffect(() => {
     onSelectionChange?.(Array.from(selectedIds));
-  }, [selectedIds, onSelectionChange]);
+  }, [selectedIds]);
 
   // update ctrl key state dynamically
   useEffect(() => {
@@ -33,31 +38,32 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
     };
   }, []);
 
+  const computeSelectionBounds = () => {
+    const minX = Math.min(startPos.x, currentPos.x);
+    const minY = Math.min(startPos.y, currentPos.y);
+    const maxX = Math.max(startPos.x, currentPos.x);
+    const maxY = Math.max(startPos.y, currentPos.y);
+    return { minX, minY, maxX, maxY };
+  };
+
   const updateSelection = useCallback(() => {
-    if (!selectionRef.current || !containerRef.current) return;
+    if (!containerRef.current) return;
 
-    const selectionRect = selectionRef.current.getBoundingClientRect();
-    const containerRect = containerRef.current.getBoundingClientRect();
+    const { minX, minY, maxX, maxY } = computeSelectionBounds();
 
-    const minX =
-      selectionRect.left - containerRect.left + containerRef.current.scrollLeft;
-    const maxX =
-      selectionRect.right -
-      containerRect.left +
-      containerRef.current.scrollLeft;
-    const minY =
-      selectionRect.top - containerRect.top + containerRef.current.scrollTop;
-    const maxY =
-      selectionRect.bottom - containerRect.top + containerRef.current.scrollTop;
+    const container = containerRef.current;
+    const containerRect = container.getBoundingClientRect();
 
     //const newSelected = new Set(isCtrlKey ? selectedIdsRef.current : []);
-    const newSelected = new Set(isCtrlKey ? dragStartSelectionRef.current : []);
+    //const newSelected = new Set(isCtrlKey ? dragStartSelectionRef.current : []);
 
     const selectableItems =
-      containerRef.current.querySelectorAll("[data-selectable]");
+      containerRef.current.querySelectorAll("[data-selectable]"); // all selectable items in the container
 
+    const frameIntersections = []; // to store items that intersect with the selection box
     selectableItems.forEach((item) => {
       const rect = item.getBoundingClientRect();
+
       const itemTop =
         rect.top - containerRect.top + containerRef.current.scrollTop;
       const itemBottom =
@@ -67,19 +73,89 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
       const itemRight =
         rect.right - containerRect.left + containerRef.current.scrollLeft;
 
-      if (
-        maxX > itemLeft &&
-        minX < itemRight &&
-        maxY > itemTop &&
-        minY < itemBottom
-      ) {
-        const id = item.dataset.id;
-        newSelected.add(id); // only add dont delete within selection box/area
+      // convert band (viewport) into the same container-relative space
+      const bandTop = minY - containerRect.top + container.scrollTop;
+      const bandBottom = maxY - containerRect.top + container.scrollTop;
+      const bandLeft = minX - containerRect.left + container.scrollLeft;
+      const bandRight = maxX - containerRect.left + container.scrollLeft;
+
+      const intersects =
+        bandRight > itemLeft &&
+        bandLeft < itemRight &&
+        bandBottom > itemTop &&
+        bandTop < itemBottom;
+
+      if (intersects) {
+        frameIntersections.push(item.dataset.id);
       }
     });
 
-    setSelectedIds(newSelected);
-  }, [isCtrlKey]);
+    // accumulate everything we've touched during this drag
+    for (const id of frameIntersections) {
+      dragAccumulatedRef.current.add(id);
+    }
+
+    // base: what we had at drag start if Ctrl is down, otherwise empty
+    const base = isCtrlKey ? dragStartSelectionRef.current : new Set();
+
+    // final = base ∪ accumulated (never remove during the drag)
+    const next = new Set(base);
+    for (const id of dragAccumulatedRef.current) next.add(id);
+
+    setSelectedIds(next);
+  }, [isCtrlKey, startPos, currentPos]);
+
+  // continuous auto-scroll while dragging near edges
+  const autoScrollLoop = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
+    const step = () => {
+      if (!isSelectingRef.current || !containerRef.current) return;
+
+      const e = lastMouseEventRef.current;
+      const container = containerRef.current;
+      const rect = container.getBoundingClientRect();
+
+      const threshold = 40; // px from edge
+      const vSpeed = 12; // vertical px/frame
+      const hSpeed = 12; // horizontal px/frame (if you ever need horizontally scrolling lists)
+
+      let scrolled = false;
+
+      if (e) {
+        // vertical
+        if (e.clientY < rect.top + threshold) {
+          container.scrollTop = Math.max(0, container.scrollTop - vSpeed);
+          scrolled = true;
+        } else if (e.clientY > rect.bottom - threshold) {
+          container.scrollTop = Math.min(
+            container.scrollHeight - container.clientHeight,
+            container.scrollTop + vSpeed
+          );
+          scrolled = true;
+        }
+
+        // horizontal (optional; enables if your list can scroll horizontally)
+        if (e.clientX < rect.left + threshold) {
+          container.scrollLeft = Math.max(0, container.scrollLeft - hSpeed);
+          scrolled = true;
+        } else if (e.clientX > rect.right - threshold) {
+          container.scrollLeft = Math.min(
+            container.scrollWidth - container.clientWidth,
+            container.scrollLeft + hSpeed
+          );
+          scrolled = true;
+        }
+      }
+
+      if (scrolled) {
+        // as we scroll new items enter the band; keep accumulating
+        updateSelection();
+      }
+
+      rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+  }, [updateSelection]);
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
@@ -107,14 +183,30 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
 
     // drag select anywhere in document
     setIsSelecting(true);
+    isSelectingRef.current = true;
     setIsCtrlKey(e.ctrlKey);
     setStartPos({ x: e.clientX, y: e.clientY });
     setCurrentPos({ x: e.clientX, y: e.clientY });
 
-    // store selection at drag start
+    // snapshot current selection & clear accumulated for this drag
     dragStartSelectionRef.current = new Set(selectedIdsRef.current);
+    dragAccumulatedRef.current = new Set();
 
+    lastMouseEventRef.current = e;
     document.body.style.userSelect = "none";
+
+    // show the selection box immediately
+    if (selectionRef.current) {
+      Object.assign(selectionRef.current.style, {
+        left: `${e.clientX}px`,
+        top: `${e.clientY}px`,
+        width: `0px`,
+        height: `0px`,
+        display: "block",
+      });
+    }
+
+    autoScrollLoop(); // start continuous scroll watcher
   };
 
   const handleMouseMove = (e) => {
@@ -145,47 +237,52 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
     }
 
     updateSelection();
-    autoScroll(e);
+    //autoScroll(e);
   };
 
-  const autoScroll = useCallback((e) => {
-  const container = containerRef.current;
-  if (!container) return;
+  /*
+  const autoScroll = useCallback(
+    (e) => {
+      const container = containerRef.current;
+      if (!container) return;
 
-  const rect = container.getBoundingClientRect();
-  const threshold = 40; // px from top/bottom edge to start scrolling
-  const speed = 10; // px per frame
+      const rect = container.getBoundingClientRect();
+      const threshold = 40; // px from top/bottom edge to start scrolling
+      const speed = 10; // px per frame
 
-  cancelAnimationFrame(animationFrameRef.current);
+      cancelAnimationFrame(animationFrameRef.current);
 
-  const scrollStep = () => {
-    if (!isSelecting) return;
+      const scrollStep = () => {
+        if (!isSelecting) return;
 
-    let scrolled = false;
+        let scrolled = false;
 
-    if (e.clientY < rect.top + threshold) {
-      container.scrollTop = Math.max(0, container.scrollTop - speed);
-      scrolled = true;
-    } else if (e.clientY > rect.bottom - threshold) {
-      container.scrollTop = Math.min(
-        container.scrollHeight - container.clientHeight,
-        container.scrollTop + speed
-      );
-      scrolled = true;
-    }
+        if (e.clientY < rect.top + threshold) {
+          container.scrollTop = Math.max(0, container.scrollTop - speed);
+          scrolled = true;
+        } else if (e.clientY > rect.bottom - threshold) {
+          container.scrollTop = Math.min(
+            container.scrollHeight - container.clientHeight,
+            container.scrollTop + speed
+          );
+          scrolled = true;
+        }
 
-    if (scrolled) {
-      updateSelection();
+        if (scrolled) {
+          updateSelection();
+          animationFrameRef.current = requestAnimationFrame(scrollStep);
+        }
+      };
+
       animationFrameRef.current = requestAnimationFrame(scrollStep);
-    }
-  };
-
-  animationFrameRef.current = requestAnimationFrame(scrollStep);
-}, [isSelecting, updateSelection]);
+    },
+    [isSelecting, updateSelection]
+  );*/
 
   const handleMouseUp = () => {
     if (!isSelecting) return;
     setIsSelecting(false);
+    isSelectingRef.current = false;
     document.body.style.userSelect = "";
     if (selectionRef.current) selectionRef.current.style.display = "none";
     cancelAnimationFrame(animationFrameRef.current);
