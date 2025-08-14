@@ -95,6 +95,8 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
       dragAccumulatedRef.current.add(id);
     }
 
+    if (!isSelectingRef.current) return; // only update during active drag
+
     // base: what we had at drag start if Ctrl is down, otherwise empty
     const base = isCtrlKey ? dragStartSelectionRef.current : new Set();
 
@@ -160,6 +162,9 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
 
+    //dragStartSelectionRef.current.clear();
+    //dragAccumulatedRef.current.clear();
+
     const container = containerRef.current;
     const item = e.target.closest("[data-selectable]");
     const itemId = item?.dataset.id;
@@ -181,6 +186,8 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
       return;
     }
 
+    if (e.target.closest("button, input, a")) return;
+
     // drag select anywhere in document
     setIsSelecting(true);
     isSelectingRef.current = true;
@@ -189,8 +196,13 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
     setCurrentPos({ x: e.clientX, y: e.clientY });
 
     // snapshot current selection & clear accumulated for this drag
-    dragStartSelectionRef.current = new Set(selectedIdsRef.current);
-    dragAccumulatedRef.current = new Set();
+
+    if (e.ctrlKey) {
+      dragStartSelectionRef.current = new Set(selectedIdsRef.current); // append to existing selection
+    } else {
+      dragStartSelectionRef.current = new Set(); // non-Ctrl: start fresh
+    }
+    dragAccumulatedRef.current = new Set(); // always clear accumulation
 
     lastMouseEventRef.current = e;
     document.body.style.userSelect = "none";
@@ -237,47 +249,7 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
     }
 
     updateSelection();
-    //autoScroll(e);
   };
-
-  /*
-  const autoScroll = useCallback(
-    (e) => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      const rect = container.getBoundingClientRect();
-      const threshold = 40; // px from top/bottom edge to start scrolling
-      const speed = 10; // px per frame
-
-      cancelAnimationFrame(animationFrameRef.current);
-
-      const scrollStep = () => {
-        if (!isSelecting) return;
-
-        let scrolled = false;
-
-        if (e.clientY < rect.top + threshold) {
-          container.scrollTop = Math.max(0, container.scrollTop - speed);
-          scrolled = true;
-        } else if (e.clientY > rect.bottom - threshold) {
-          container.scrollTop = Math.min(
-            container.scrollHeight - container.clientHeight,
-            container.scrollTop + speed
-          );
-          scrolled = true;
-        }
-
-        if (scrolled) {
-          updateSelection();
-          animationFrameRef.current = requestAnimationFrame(scrollStep);
-        }
-      };
-
-      animationFrameRef.current = requestAnimationFrame(scrollStep);
-    },
-    [isSelecting, updateSelection]
-  );*/
 
   const handleMouseUp = () => {
     if (!isSelecting) return;
@@ -288,15 +260,29 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
     cancelAnimationFrame(animationFrameRef.current);
   };
 
+  const handleGlobalMouseDown = (e) => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // if click is outside container, clear selection and refs
+    if (!container.contains(e.target)) {
+      setSelectedIds(new Set());
+      dragStartSelectionRef.current.clear();
+      dragAccumulatedRef.current.clear();
+    }
+  };
+
   // global event listeners
   useEffect(() => {
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+    //window.addEventListener("mousedown", handleGlobalMouseDown);
     return () => {
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      //window.removeEventListener("mousedown", handleGlobalMouseDown);
     };
   }, [handleMouseMove, handleMouseDown, handleMouseUp]);
 
