@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import Selecto from "react-selecto";
-import path from "path";
 import FileList from "./components/FileList";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import Toast from "./components/Toast";
@@ -12,6 +11,7 @@ const lightText = "rgba(230, 230, 230, 1)"; // text color (light)
 
 function App() {
   const fileListRef = useRef(null);
+  const selectoRef = useRef(null);
 
   const [folderPath, setFolderPath] = useState(null);
   const [files, setFiles] = useState([]);
@@ -39,6 +39,36 @@ function App() {
     }
     fetchCommonFolders();
   }, []);
+
+  // debug
+  useEffect(() => {
+    const container = fileListRef.current;
+    const selectoInstance = selectoRef.current;
+
+    console.log("fileListRef.current:", container);
+    console.log(
+      "Is fileListRef an HTMLElement?",
+      container instanceof HTMLElement
+    );
+
+    console.log("selectoRef.current:", selectoInstance);
+    console.log(
+      "Is Selecto dragContainer an HTMLElement?",
+      selectoInstance?.props.dragContainer instanceof HTMLElement
+    );
+
+    if (container) {
+      console.log("scrollTop:", container.scrollTop);
+      console.log("scrollHeight:", container.scrollHeight);
+      console.log("clientHeight:", container.clientHeight);
+    } else {
+      console.warn("fileListRef.current is null!");
+    }
+
+    if (!selectoInstance?.props.dragContainer) {
+      console.warn("Selecto dragContainer is null or undefined!");
+    }
+  }, [fileListRef.current, selectoRef.current]);
 
   function toggleSelectFile(fileName) {
     const clickedFile = files.find((f) => f.name === fileName);
@@ -184,41 +214,63 @@ function App() {
         {folderPath || "No folder selected"}
       </div>
 
-      <FileList
-        files={files}
-        selectedFiles={selectedFiles}
-        toggleSelectFile={toggleSelectFile}
-        listRef={fileListRef} // pass ref
-        onOpenFolder={async (folderName) => {
-          const newPath = folderPath.endsWith(pathSeparator)
-            ? `${folderPath}${folderName}`
-            : `${folderPath}${pathSeparator}${folderName}`;
+      <div id="file-list-wrapper">
+        <FileList
+          files={files}
+          selectedFiles={selectedFiles}
+          toggleSelectFile={toggleSelectFile}
+          listRef={fileListRef} // pass ref
+          onOpenFolder={async (folderName) => {
+            const newPath = folderPath.endsWith(pathSeparator)
+              ? `${folderPath}${folderName}`
+              : `${folderPath}${pathSeparator}${folderName}`;
 
-          const scannedFiles = await window.electronAPI.scanFolder(newPath);
-          setFolderPath(newPath);
-          setFiles(scannedFiles);
-          setSelectedFiles(new Set());
-        }}
-      />
+            const scannedFiles = await window.electronAPI.scanFolder(newPath);
+            setFolderPath(newPath);
+            setFiles(scannedFiles);
+            setSelectedFiles(new Set());
+          }}
+        />
+      </div>
 
       <Selecto
-        container={document.body}
-        dragContainer={fileListRef.current} // restrict drag area
+        ref={selectoRef}
+        container={document.body} // can start anywhere
+        dragContainer={fileListRef.current}
         selectableTargets={[".file-item"]}
         hitRate={0}
         selectByClick={true}
         selectFromInside={true}
-        onDragStart={(e) => {
-          if (e.inputEvent.target.closest(".no-drag")) {
-            e.stop(); // prevent drag if clicking on buttons
-          }
+        toggleContinueSelect={false}
+        // auto scroll fix?
+        scrollOptions={{
+          container: fileListRef.current,
+          throttleMove: 20,
+          threshold: 100,
         }}
+        onDragStart={(e) => {
+          if (e.inputEvent.target.closest(".no-drag")) e.stop();
+        }}
+        /*onDragMove={(e) => {
+          const container = fileListRef.current; // always get live ref here
+          if (!container) return;
+
+          const rect = container.getBoundingClientRect();
+          const threshold = 40;
+          const speed = 10;
+
+          if (e.clientY < rect.top + threshold) container.scrollTop -= speed;
+          else if (e.clientY > rect.bottom - threshold)
+            container.scrollTop += speed;
+
+          selectoRef.current?.checkSelected();
+        }}*/
         onSelect={(e) => {
           const selectedNames = e.selected
             .map((el) => el.dataset.name)
             .filter((name) => {
               const file = files.find((f) => f.name === name);
-              return file && !file.isDirectory; // only select files, not folders
+              return file && !file.isDirectory;
             });
           setSelectedFiles(new Set(selectedNames));
         }}
