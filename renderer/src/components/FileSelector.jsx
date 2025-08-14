@@ -14,6 +14,8 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
   const selectedIdsRef = useRef(selectedIds);
   selectedIdsRef.current = selectedIds;
 
+  const dragStartSelectionRef = useRef(new Set());
+
   // tell parent when selection changes
   useEffect(() => {
     onSelectionChange?.(Array.from(selectedIds));
@@ -37,28 +39,42 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
     const selectionRect = selectionRef.current.getBoundingClientRect();
     const containerRect = containerRef.current.getBoundingClientRect();
 
-    const minX = selectionRect.left - containerRect.left + containerRef.current.scrollLeft;
-    const maxX = selectionRect.right - containerRect.left + containerRef.current.scrollLeft;
-    const minY = selectionRect.top - containerRect.top + containerRef.current.scrollTop;
-    const maxY = selectionRect.bottom - containerRect.top + containerRef.current.scrollTop;
+    const minX =
+      selectionRect.left - containerRect.left + containerRef.current.scrollLeft;
+    const maxX =
+      selectionRect.right -
+      containerRect.left +
+      containerRef.current.scrollLeft;
+    const minY =
+      selectionRect.top - containerRect.top + containerRef.current.scrollTop;
+    const maxY =
+      selectionRect.bottom - containerRect.top + containerRef.current.scrollTop;
 
-    const newSelected = new Set(isCtrlKey ? selectedIdsRef.current : []);
+    //const newSelected = new Set(isCtrlKey ? selectedIdsRef.current : []);
+    const newSelected = new Set(isCtrlKey ? dragStartSelectionRef.current : []);
 
-    const selectableItems = containerRef.current.querySelectorAll("[data-selectable]");
+    const selectableItems =
+      containerRef.current.querySelectorAll("[data-selectable]");
+
     selectableItems.forEach((item) => {
       const rect = item.getBoundingClientRect();
-      const itemTop = rect.top - containerRect.top + containerRef.current.scrollTop;
-      const itemBottom = rect.bottom - containerRect.top + containerRef.current.scrollTop;
-      const itemLeft = rect.left - containerRect.left + containerRef.current.scrollLeft;
-      const itemRight = rect.right - containerRect.left + containerRef.current.scrollLeft;
+      const itemTop =
+        rect.top - containerRect.top + containerRef.current.scrollTop;
+      const itemBottom =
+        rect.bottom - containerRect.top + containerRef.current.scrollTop;
+      const itemLeft =
+        rect.left - containerRect.left + containerRef.current.scrollLeft;
+      const itemRight =
+        rect.right - containerRect.left + containerRef.current.scrollLeft;
 
-      if (maxX > itemLeft && minX < itemRight && maxY > itemTop && minY < itemBottom) {
+      if (
+        maxX > itemLeft &&
+        minX < itemRight &&
+        maxY > itemTop &&
+        minY < itemBottom
+      ) {
         const id = item.dataset.id;
-        if (isCtrlKey && newSelected.has(id)) {
-          newSelected.delete(id);
-        } else {
-          newSelected.add(id);
-        }
+        newSelected.add(id); // only add dont delete within selection box/area
       }
     });
 
@@ -94,6 +110,10 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
     setIsCtrlKey(e.ctrlKey);
     setStartPos({ x: e.clientX, y: e.clientY });
     setCurrentPos({ x: e.clientX, y: e.clientY });
+
+    // store selection at drag start
+    dragStartSelectionRef.current = new Set(selectedIdsRef.current);
+
     document.body.style.userSelect = "none";
   };
 
@@ -128,35 +148,40 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
     autoScroll(e);
   };
 
-  const autoScroll = useCallback(
-    (e) => {
-      const container = containerRef.current;
-      if (!container) return;
+  const autoScroll = useCallback((e) => {
+  const container = containerRef.current;
+  if (!container) return;
 
-      const rect = container.getBoundingClientRect();
-      const threshold = 40;
-      const speed = 10;
+  const rect = container.getBoundingClientRect();
+  const threshold = 40; // px from top/bottom edge to start scrolling
+  const speed = 10; // px per frame
 
-      const scroll = () => {
-        if (!isSelecting) return;
-        if (e.clientY < rect.top + threshold) {
-          container.scrollTop = Math.max(0, container.scrollTop - speed);
-          animationFrameRef.current = requestAnimationFrame(scroll);
-        } else if (e.clientY > rect.bottom - threshold) {
-          container.scrollTop = Math.min(container.scrollHeight - container.clientHeight, container.scrollTop + speed);
-          animationFrameRef.current = requestAnimationFrame(scroll);
-        } else {
-          cancelAnimationFrame(animationFrameRef.current);
-        }
-      };
+  cancelAnimationFrame(animationFrameRef.current);
 
-      if (e.clientY < rect.top + threshold || e.clientY > rect.bottom - threshold) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = requestAnimationFrame(scroll);
-      }
-    },
-    [isSelecting]
-  );
+  const scrollStep = () => {
+    if (!isSelecting) return;
+
+    let scrolled = false;
+
+    if (e.clientY < rect.top + threshold) {
+      container.scrollTop = Math.max(0, container.scrollTop - speed);
+      scrolled = true;
+    } else if (e.clientY > rect.bottom - threshold) {
+      container.scrollTop = Math.min(
+        container.scrollHeight - container.clientHeight,
+        container.scrollTop + speed
+      );
+      scrolled = true;
+    }
+
+    if (scrolled) {
+      updateSelection();
+      animationFrameRef.current = requestAnimationFrame(scrollStep);
+    }
+  };
+
+  animationFrameRef.current = requestAnimationFrame(scrollStep);
+}, [isSelecting, updateSelection]);
 
   const handleMouseUp = () => {
     if (!isSelecting) return;
