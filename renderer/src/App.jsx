@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import Selecto from "react-selecto";
+//import Selecto from "react-selecto";
+import FileSelector from "./components/FileSelector";
 import FileList from "./components/FileList";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import Toast from "./components/Toast";
@@ -214,7 +215,7 @@ function App() {
         {folderPath || "No folder selected"}
       </div>
 
-      <div id="file-list-wrapper">
+      {/*<div id="file-list-wrapper">
         <FileList
           files={files}
           selectedFiles={selectedFiles}
@@ -236,35 +237,17 @@ function App() {
       <Selecto
         ref={selectoRef}
         container={document.body} // can start anywhere
-        dragContainer={fileListRef.current}
+        //dragContainer={selectoContainer}
         selectableTargets={[".file-item"]}
         hitRate={0}
         selectByClick={true}
         selectFromInside={true}
         toggleContinueSelect={false}
-        // auto scroll fix?
-        scrollOptions={{
-          container: fileListRef.current,
-          throttleMove: 20,
-          threshold: 100,
-        }}
         onDragStart={(e) => {
+          console.log("fileListRef.current:", fileListRef.current);
           if (e.inputEvent.target.closest(".no-drag")) e.stop();
         }}
-        /*onDragMove={(e) => {
-          const container = fileListRef.current; // always get live ref here
-          if (!container) return;
 
-          const rect = container.getBoundingClientRect();
-          const threshold = 40;
-          const speed = 10;
-
-          if (e.clientY < rect.top + threshold) container.scrollTop -= speed;
-          else if (e.clientY > rect.bottom - threshold)
-            container.scrollTop += speed;
-
-          selectoRef.current?.checkSelected();
-        }}*/
         onSelect={(e) => {
           const selectedNames = e.selected
             .map((el) => el.dataset.name)
@@ -274,7 +257,52 @@ function App() {
             });
           setSelectedFiles(new Set(selectedNames));
         }}
-      />
+      />*/}
+
+      <div id="file-list-wrapper">
+        <FileSelector
+          containerRef={fileListRef}
+          items={files}
+          render={(items, selectedIds) => (
+            <FileList
+              files={items}
+              selectedFiles={selectedIds}
+              toggleSelectFile={(fileName) => {
+                // toggle single click selection as before
+                const clickedFile = files.find((f) => f.name === fileName);
+                if (
+                  clickedFile?.isDirectory &&
+                  clickedFile?.isEmptyFolder === false
+                )
+                  return;
+
+                setSelectedFiles((prev) => {
+                  const newSet = new Set(prev);
+                  if (newSet.has(fileName)) newSet.delete(fileName);
+                  else newSet.add(fileName);
+                  return newSet;
+                });
+              }}
+              listRef={fileListRef}
+              onOpenFolder={async (folderName) => {
+                const newPath = folderPath.endsWith(pathSeparator)
+                  ? `${folderPath}${folderName}`
+                  : `${folderPath}${pathSeparator}${folderName}`;
+
+                const scannedFiles = await window.electronAPI.scanFolder(
+                  newPath
+                );
+                setFolderPath(newPath);
+                setFiles(scannedFiles);
+                setSelectedFiles(new Set());
+              }}
+            />
+          )}
+          onSelectionChange={(newSelection) =>
+            setSelectedFiles(new Set(newSelection))
+          }
+        />
+      </div>
 
       {/* Confirm Delete Form/Modal */}
       <ConfirmDeleteModal

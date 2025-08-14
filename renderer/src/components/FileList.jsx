@@ -30,7 +30,9 @@ export default function FileList({
               className={`file-item ${isSelected ? "selected" : ""} ${
                 file.isDirectory && !file.isEmptyFolder ? "disabled" : ""
               }`}
+              data-id={file.name}
               data-name={file.name}
+              data-selectable
               onClick={() => {
                 if (!(file.isDirectory && !file.isEmptyFolder)) {
                   toggleSelectFile(file.name);
