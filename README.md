@@ -88,6 +88,9 @@ npm start
 - File selecting whilst scrolling
     - Not using React Selecto anymore
     - Using component for selecting logic to more easily implement and debug autoscroll, 'ctrl +', and selection persistence
+- Inconsistent file selecting and odd file selection persistence
+    - Likely related to onMouseDown handlers, will need a workaround to ensure truths don't overlap or cause improper falses
+    - Implemented a global onMouseDown handler, but need to adjust it to not prevent buttons
 
 ---
 
