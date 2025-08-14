@@ -4,6 +4,7 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
   const containerRef = useRef(null);
   const selectionRef = useRef(null);
   const rafRef = useRef(null);
+  const rafScrollRef = useRef(null);
 
   const [isSelecting, setIsSelecting] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
@@ -13,6 +14,10 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
   const lastMouseEventRef = useRef(null);
   const dragStartSelectionRef = useRef(new Set()); // snapshot of selection at drag start (ctrl+ drag appends to this)
   const dragAccumulatedRef = useRef(new Set()); // accumulated selection during drag (persist across scrolling)
+
+  //const dragModeRef = useRef("add"); // 'add' or 'remove' during drag
+  //const dragTouchedRef = useRef(new Set());
+
   const isSelectingRef = useRef(false);
 
   // update ctrl key state dynamically
@@ -39,7 +44,6 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     if (!isSelectingRef.current) return; // only update during active drag
 
     const { minX, minY, maxX, maxY } = computeSelectionBounds();
-
     const container = containerRef.current;
     const containerRect = container.getBoundingClientRect();
 
@@ -47,6 +51,7 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
       containerRef.current.querySelectorAll("[data-selectable]"); // all selectable items in the container
 
     const frameIntersections = []; // to store items that intersect with the selection box
+
     selectableItems.forEach((item) => {
       const rect = item.getBoundingClientRect();
 
@@ -76,22 +81,15 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
       }
     });
 
-    // accumulate everything we've touched during this drag
-    for (const id of frameIntersections) {
-      dragAccumulatedRef.current.add(id);
-    }
+    // Build next selection from drag start + current intersections
+    const next = new Set(isCtrlKey ? dragStartSelectionRef.current : new Set());
 
-    if (!isSelectingRef.current) return; // only update during active drag
+    frameIntersections.forEach((id) => {
+      if (dragStartSelectionRef.current.has(id)) next.delete(id);
+      else next.add(id);
+    });
 
-    // base: what we had at drag start if Ctrl is down, otherwise empty
-    const base = isCtrlKey ? dragStartSelectionRef.current : new Set();
-
-    // final = base ∪ accumulated (never remove during the drag)
-    const next = new Set(base);
-    for (const id of dragAccumulatedRef.current) next.add(id);
-
-    // keep ref & state in sync immediately
-    onSelectionChange(new Set(next)); // notify parent of changes
+    onSelectionChange(next); // notify parent of changes
   }, [isCtrlKey, startPos, currentPos]);
 
   // continuous auto-scroll while dragging near edges
@@ -104,44 +102,30 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
       const container = containerRef.current;
       const rect = container.getBoundingClientRect();
 
-      const threshold = 40; // px from edge
-      const vSpeed = 12; // vertical px/frame
-      const hSpeed = 12; // horizontal px/frame (if you ever need horizontally scrolling lists)
+      const threshold = 60; // px from edge
+      const vSpeed = 20; // vertical px/frame
 
       let scrolled = false;
 
       if (e) {
-        // vertical
+        // vertical auto-scroll
         if (e.clientY < rect.top + threshold) {
+          const oldScroll = container.scrollTop;
           container.scrollTop = Math.max(0, container.scrollTop - vSpeed);
-          scrolled = true;
+          scrolled = container.scrollTop !== oldScroll;
         } else if (e.clientY > rect.bottom - threshold) {
+          const oldScroll = container.scrollTop;
           container.scrollTop = Math.min(
             container.scrollHeight - container.clientHeight,
             container.scrollTop + vSpeed
           );
-          scrolled = true;
-        }
-
-        // horizontal (optional; enables if your list can scroll horizontally)
-        if (e.clientX < rect.left + threshold) {
-          container.scrollLeft = Math.max(0, container.scrollLeft - hSpeed);
-          scrolled = true;
-        } else if (e.clientX > rect.right - threshold) {
-          container.scrollLeft = Math.min(
-            container.scrollWidth - container.clientWidth,
-            container.scrollLeft + hSpeed
-          );
-          scrolled = true;
+          scrolled = container.scrollTop !== oldScroll;
         }
       }
 
-      if (scrolled) {
-        // as we scroll new items enter the band; keep accumulating
-        updateSelection();
-      }
+      if (scrolled) updateSelection(); // only update if scroll actually moved
 
-      rafRef.current = requestAnimationFrame(step);
+      rafRef.current = requestAnimationFrame(step); // schedule next frame
     };
     rafRef.current = requestAnimationFrame(step);
   }, [updateSelection]);
@@ -151,6 +135,13 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
 
     const item = e.target.closest("[data-selectable]");
     const itemId = item?.dataset.id;
+
+    /*if (itemId) {
+      // starting drag on an existing selected item -> remove mode
+      dragModeRef.current = selectedIds.has(itemId) ? "remove" : "add";
+    } else {
+      dragModeRef.current = "add"; // blank space -> adding mode
+    }*/
 
     // ctrl + click toggles selection
     if (e.ctrlKey && itemId) {
@@ -173,6 +164,7 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     // drag select anywhere in document
     setIsSelecting(true);
     isSelectingRef.current = true;
+    //dragTouchedRef.current.clear();
     setIsCtrlKey(e.ctrlKey);
     setStartPos({ x: e.clientX, y: e.clientY });
     setCurrentPos({ x: e.clientX, y: e.clientY });
@@ -244,6 +236,8 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
 
+    //dragTouchedRef.current.clear(); // clear touched items for next drag
+
     // finalize and clear accumulation for future drags
     dragStartSelectionRef.current = new Set();
     dragAccumulatedRef.current.clear();
@@ -281,6 +275,20 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
       window.removeEventListener("mousedown", handleGlobalMouseDown);
     };
   }, [handleMouseMove, handleMouseDown, handleMouseUp]);
+
+  // handle scroll events to update selection
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (!isSelectingRef.current) return;
+      updateSelection(); // immediate update
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [updateSelection]);
 
   return (
     <div
