@@ -268,20 +268,9 @@ function App() {
               files={items}
               selectedFiles={selectedIds}
               toggleSelectFile={(fileName) => {
-                // toggle single click selection as before
-                const clickedFile = files.find((f) => f.name === fileName);
-                if (
-                  clickedFile?.isDirectory &&
-                  clickedFile?.isEmptyFolder === false
-                )
-                  return;
-
-                setSelectedFiles((prev) => {
-                  const newSet = new Set(prev);
-                  if (newSet.has(fileName)) newSet.delete(fileName);
-                  else newSet.add(fileName);
-                  return newSet;
-                });
+                // let FileSelector handle selection
+                const item = files.find((f) => f.name === fileName);
+                if (!item || (item.isDirectory && !item.isEmptyFolder)) return;
               }}
               listRef={fileListRef}
               onOpenFolder={async (folderName) => {

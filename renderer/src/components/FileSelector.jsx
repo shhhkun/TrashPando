@@ -91,8 +91,6 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     for (const id of dragAccumulatedRef.current) next.add(id);
 
     // keep ref & state in sync immediately
-    //selectedIdsRef.current = next;
-    //setSelectedIds(next);
     onSelectionChange(new Set(next)); // notify parent of changes
   }, [isCtrlKey, startPos, currentPos]);
 
@@ -151,25 +149,22 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
 
-    //const container = containerRef.current;
     const item = e.target.closest("[data-selectable]");
     const itemId = item?.dataset.id;
 
     // ctrl + click toggles selection
     if (e.ctrlKey && itemId) {
       // synchronously compute and set so refs remain consistent
-      const newSet = new Set(selectedIdsRef.current);
+      const newSet = new Set(selectedIds);
       if (newSet.has(itemId)) newSet.delete(itemId);
       else newSet.add(itemId);
-      selectedIdsRef.current = newSet;
-      setSelectedIds(newSet);
+      onSelectionChange(newSet);
       return;
     }
 
     // single click selects only that item
     if (!e.ctrlKey && itemId) {
-      const newSet = new Set([itemId]);
-      onSelectionChange(newSet);
+      onSelectionChange(new Set([itemId]));
       return;
     }
 
@@ -183,13 +178,13 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     setCurrentPos({ x: e.clientX, y: e.clientY });
 
     // snapshot current selection & clear accumulated for this drag
-
     if (e.ctrlKey) {
-      dragStartSelectionRef.current = new Set(selectedIdsRef.current); // append to existing selection
+      dragStartSelectionRef.current = new Set(selectedIds); // append to existing selection
     } else {
       dragStartSelectionRef.current = new Set(); // non-Ctrl: start fresh
+      dragAccumulatedRef.current.clear(); // clear any old accumulated selections
+      onSelectionChange(new Set()); // also clear App state
     }
-    dragAccumulatedRef.current = new Set(); // always clear accumulation
 
     lastMouseEventRef.current = e;
     document.body.style.userSelect = "none";
@@ -205,7 +200,7 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
       });
     }
 
-    autoScrollLoop(); // start continuous scroll watcher
+    //autoScrollLoop(); // start continuous scroll watcher
   };
 
   const handleMouseMove = (e) => {
@@ -251,7 +246,7 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
 
     // finalize and clear accumulation for future drags
     dragStartSelectionRef.current = new Set();
-    dragAccumulatedRef.current = new Set();
+    dragAccumulatedRef.current.clear();
   };
 
   const handleGlobalMouseDown = (e) => {
