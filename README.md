@@ -65,7 +65,7 @@ npm start
 - Added file deletion
 - Supports multi-file selection, delete confirmation modal, and toast popup messages for number of files removed
 - Implemented drag and select for multiple file selection
-- File recovery?
+- Load/scan common folders on OS as suggested areas of cleaning
 
 ---
 
@@ -73,6 +73,8 @@ npm start
 - [x] Implement basic file scanning and metadata collection
 - [ ] File previews and sorting/filtering options
 - [ ] Undo button for last delete action/safety net
+    - Trashing/recycling (depends on OS) items rather than permanent delete currently
+    - Will later make it togglable in settings for power users
 - [ ] Duplicate detection & improve metadata collection
 - [ ] Smart metrics integration (last access time, usage frequency)
 - [ ] Packaged installers for Windows/macOS
@@ -82,6 +84,10 @@ npm start
 
 ## Known Issues
 - Path separator fetching is a bit unoptimized, check/look into preload.js loading properly as to use electronAPI calls rather than state & useEffect
+- Common folders scan is somewhat restricted/limited by how its defined in main.js, possibly allow user to add their own preference of common folders
+- File selecting whilst scrolling
+    - Not using React Selecto anymore
+    - Using component for selecting logic to more easily implement and debug autoscroll, 'ctrl +', and selection persistence
 
 ---
 
