@@ -233,7 +233,6 @@ function App() {
           }}
         />
       </div>
-
       <Selecto
         ref={selectoRef}
         container={document.body} // can start anywhere
@@ -263,6 +262,7 @@ function App() {
         <FileSelector
           containerRef={fileListRef}
           items={files}
+          selectedIds={selectedFiles}
           render={(items, selectedIds) => (
             <FileList
               files={items}

@@ -1,30 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
-const FileSelector = ({ items, render, onSelectionChange }) => {
+const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
   const containerRef = useRef(null);
   const selectionRef = useRef(null);
-  const animationFrameRef = useRef();
   const rafRef = useRef(null);
 
-  const [selectedIds, setSelectedIds] = useState(new Set());
   const [isSelecting, setIsSelecting] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [currentPos, setCurrentPos] = useState({ x: 0, y: 0 });
   const [isCtrlKey, setIsCtrlKey] = useState(false);
 
-  const selectedIdsRef = useRef(selectedIds);
-  selectedIdsRef.current = selectedIds;
-
   const lastMouseEventRef = useRef(null);
-
   const dragStartSelectionRef = useRef(new Set()); // snapshot of selection at drag start (ctrl+ drag appends to this)
   const dragAccumulatedRef = useRef(new Set()); // accumulated selection during drag (persist across scrolling)
   const isSelectingRef = useRef(false);
-
-  // tell parent when selection changes
-  useEffect(() => {
-    onSelectionChange?.(Array.from(selectedIds));
-  }, [selectedIds]);
 
   // update ctrl key state dynamically
   useEffect(() => {
@@ -47,15 +36,12 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
   };
 
   const updateSelection = useCallback(() => {
-    if (!containerRef.current) return;
+    if (!isSelectingRef.current) return; // only update during active drag
 
     const { minX, minY, maxX, maxY } = computeSelectionBounds();
 
     const container = containerRef.current;
     const containerRect = container.getBoundingClientRect();
-
-    //const newSelected = new Set(isCtrlKey ? selectedIdsRef.current : []);
-    //const newSelected = new Set(isCtrlKey ? dragStartSelectionRef.current : []);
 
     const selectableItems =
       containerRef.current.querySelectorAll("[data-selectable]"); // all selectable items in the container
@@ -104,7 +90,10 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
     const next = new Set(base);
     for (const id of dragAccumulatedRef.current) next.add(id);
 
-    setSelectedIds(next);
+    // keep ref & state in sync immediately
+    //selectedIdsRef.current = next;
+    //setSelectedIds(next);
+    onSelectionChange(new Set(next)); // notify parent of changes
   }, [isCtrlKey, startPos, currentPos]);
 
   // continuous auto-scroll while dragging near edges
@@ -162,27 +151,25 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
 
-    //dragStartSelectionRef.current.clear();
-    //dragAccumulatedRef.current.clear();
-
-    const container = containerRef.current;
+    //const container = containerRef.current;
     const item = e.target.closest("[data-selectable]");
     const itemId = item?.dataset.id;
 
     // ctrl + click toggles selection
     if (e.ctrlKey && itemId) {
-      setSelectedIds((prev) => {
-        const newSet = new Set(prev);
-        if (newSet.has(itemId)) newSet.delete(itemId);
-        else newSet.add(itemId);
-        return newSet;
-      });
+      // synchronously compute and set so refs remain consistent
+      const newSet = new Set(selectedIdsRef.current);
+      if (newSet.has(itemId)) newSet.delete(itemId);
+      else newSet.add(itemId);
+      selectedIdsRef.current = newSet;
+      setSelectedIds(newSet);
       return;
     }
 
     // single click selects only that item
     if (!e.ctrlKey && itemId) {
-      setSelectedIds(new Set([itemId]));
+      const newSet = new Set([itemId]);
+      onSelectionChange(newSet);
       return;
     }
 
@@ -222,7 +209,7 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
   };
 
   const handleMouseMove = (e) => {
-    if (!isSelecting) return;
+    if (!isSelectingRef.current) return;
 
     const dx = e.clientX - startPos.x;
     const dy = e.clientY - startPos.y;
@@ -252,23 +239,37 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
   };
 
   const handleMouseUp = () => {
-    if (!isSelecting) return;
+    if (!isSelectingRef.current) return;
     setIsSelecting(false);
     isSelectingRef.current = false;
     document.body.style.userSelect = "";
     if (selectionRef.current) selectionRef.current.style.display = "none";
-    cancelAnimationFrame(animationFrameRef.current);
+
+    // stop auto-scroll RAF
+    cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+
+    // finalize and clear accumulation for future drags
+    dragStartSelectionRef.current = new Set();
+    dragAccumulatedRef.current = new Set();
   };
 
   const handleGlobalMouseDown = (e) => {
     const container = containerRef.current;
     if (!container) return;
 
-    // if click is outside container, clear selection and refs
+    // ignore clicks on interactive controls anywhere
+    const isUIControl = e.target.closest("button, input, a, [data-no-clear]");
+    if (isUIControl) return;
+
+    // if click is outside container, reset *all* selection state and refs
     if (!container.contains(e.target)) {
-      setSelectedIds(new Set());
-      dragStartSelectionRef.current.clear();
-      dragAccumulatedRef.current.clear();
+      const clear = new Set();
+      onSelectionChange(clear);
+
+      // clear drag memory as well
+      dragStartSelectionRef.current = new Set();
+      dragAccumulatedRef.current = new Set();
     }
   };
 
@@ -277,12 +278,12 @@ const FileSelector = ({ items, render, onSelectionChange }) => {
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
-    //window.addEventListener("mousedown", handleGlobalMouseDown);
+    window.addEventListener("mousedown", handleGlobalMouseDown);
     return () => {
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
-      //window.removeEventListener("mousedown", handleGlobalMouseDown);
+      window.removeEventListener("mousedown", handleGlobalMouseDown);
     };
   }, [handleMouseMove, handleMouseDown, handleMouseUp]);
 
