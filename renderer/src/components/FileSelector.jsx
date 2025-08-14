@@ -15,9 +15,6 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
   const dragStartSelectionRef = useRef(new Set()); // snapshot of selection at drag start (ctrl+ drag appends to this)
   const dragAccumulatedRef = useRef(new Set()); // accumulated selection during drag (persist across scrolling)
 
-  //const dragModeRef = useRef("add"); // 'add' or 'remove' during drag
-  //const dragTouchedRef = useRef(new Set());
-
   const isSelectingRef = useRef(false);
 
   // update ctrl key state dynamically
@@ -81,9 +78,9 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
       }
     });
 
-    // Build next selection from drag start + current intersections
+    // build next selection from drag start + current intersections
     const next = new Set(isCtrlKey ? dragStartSelectionRef.current : new Set());
-
+    // recomputes selection each frame
     frameIntersections.forEach((id) => {
       if (dragStartSelectionRef.current.has(id)) next.delete(id);
       else next.add(id);
@@ -92,7 +89,7 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     onSelectionChange(next); // notify parent of changes
   }, [isCtrlKey, startPos, currentPos]);
 
-  // continuous auto-scroll while dragging near edges
+  // continuous auto-scroll while dragging near edges [will be reimplemented later]
   const autoScrollLoop = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
     const step = () => {
@@ -136,13 +133,6 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     const item = e.target.closest("[data-selectable]");
     const itemId = item?.dataset.id;
 
-    /*if (itemId) {
-      // starting drag on an existing selected item -> remove mode
-      dragModeRef.current = selectedIds.has(itemId) ? "remove" : "add";
-    } else {
-      dragModeRef.current = "add"; // blank space -> adding mode
-    }*/
-
     // ctrl + click toggles selection
     if (e.ctrlKey && itemId) {
       // synchronously compute and set so refs remain consistent
@@ -164,7 +154,6 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     // drag select anywhere in document
     setIsSelecting(true);
     isSelectingRef.current = true;
-    //dragTouchedRef.current.clear();
     setIsCtrlKey(e.ctrlKey);
     setStartPos({ x: e.clientX, y: e.clientY });
     setCurrentPos({ x: e.clientX, y: e.clientY });
@@ -235,8 +224,6 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     // stop auto-scroll RAF
     cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
-
-    //dragTouchedRef.current.clear(); // clear touched items for next drag
 
     // finalize and clear accumulation for future drags
     dragStartSelectionRef.current = new Set();
