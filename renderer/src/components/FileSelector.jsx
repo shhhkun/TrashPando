@@ -4,7 +4,6 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
   const containerRef = useRef(null);
   const selectionRef = useRef(null);
   const rafRef = useRef(null);
-  const rafScrollRef = useRef(null);
 
   const [isSelecting, setIsSelecting] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
@@ -93,44 +92,6 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
 
     onSelectionChange(next); // notify parent of changes
   }, [isCtrlKey, startPos, currentPos]);
-
-  // continuous auto-scroll while dragging near edges [will be reimplemented later]
-  const autoScrollLoop = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    const step = () => {
-      if (!isSelectingRef.current || !containerRef.current) return;
-
-      const e = lastMouseEventRef.current;
-      const container = containerRef.current;
-      const rect = container.getBoundingClientRect();
-
-      const threshold = 60; // px from edge
-      const vSpeed = 20; // vertical px/frame
-
-      let scrolled = false;
-
-      if (e) {
-        // vertical auto-scroll
-        if (e.clientY < rect.top + threshold) {
-          const oldScroll = container.scrollTop;
-          container.scrollTop = Math.max(0, container.scrollTop - vSpeed);
-          scrolled = container.scrollTop !== oldScroll;
-        } else if (e.clientY > rect.bottom - threshold) {
-          const oldScroll = container.scrollTop;
-          container.scrollTop = Math.min(
-            container.scrollHeight - container.clientHeight,
-            container.scrollTop + vSpeed
-          );
-          scrolled = container.scrollTop !== oldScroll;
-        }
-      }
-
-      if (scrolled) updateSelection(); // only update if scroll actually moved
-
-      rafRef.current = requestAnimationFrame(step); // schedule next frame
-    };
-    rafRef.current = requestAnimationFrame(step);
-  }, [updateSelection]);
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
