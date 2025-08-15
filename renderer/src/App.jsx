@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-//import Selecto from "react-selecto";
 import FileSelector from "./components/FileSelector";
 import FileList from "./components/FileList";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
@@ -42,6 +41,7 @@ function App() {
   }, []);
 
   // debug
+  /*
   useEffect(() => {
     const container = fileListRef.current;
     const selectoInstance = selectoRef.current;
@@ -70,21 +70,7 @@ function App() {
       console.warn("Selecto dragContainer is null or undefined!");
     }
   }, [fileListRef.current, selectoRef.current]);
-
-  function toggleSelectFile(fileName) {
-    const clickedFile = files.find((f) => f.name === fileName);
-
-    if (clickedFile?.isDirectory && clickedFile?.isEmptyFolder === false) {
-      return; // ignore selection
-    }
-
-    setSelectedFiles((prev) => {
-      const newSelected = new Set(prev);
-      if (newSelected.has(fileName)) newSelected.delete(fileName);
-      else newSelected.add(fileName);
-      return newSelected;
-    });
-  }
+  */
 
   async function handleSelectFolder() {
     const path = await window.electronAPI.selectFolder();
@@ -214,49 +200,6 @@ function App() {
       <div style={{ marginTop: 20, fontStyle: "italic" }}>
         {folderPath || "No folder selected"}
       </div>
-
-      {/*<div id="file-list-wrapper">
-        <FileList
-          files={files}
-          selectedFiles={selectedFiles}
-          toggleSelectFile={toggleSelectFile}
-          listRef={fileListRef} // pass ref
-          onOpenFolder={async (folderName) => {
-            const newPath = folderPath.endsWith(pathSeparator)
-              ? `${folderPath}${folderName}`
-              : `${folderPath}${pathSeparator}${folderName}`;
-
-            const scannedFiles = await window.electronAPI.scanFolder(newPath);
-            setFolderPath(newPath);
-            setFiles(scannedFiles);
-            setSelectedFiles(new Set());
-          }}
-        />
-      </div>
-      <Selecto
-        ref={selectoRef}
-        container={document.body} // can start anywhere
-        //dragContainer={selectoContainer}
-        selectableTargets={[".file-item"]}
-        hitRate={0}
-        selectByClick={true}
-        selectFromInside={true}
-        toggleContinueSelect={false}
-        onDragStart={(e) => {
-          console.log("fileListRef.current:", fileListRef.current);
-          if (e.inputEvent.target.closest(".no-drag")) e.stop();
-        }}
-
-        onSelect={(e) => {
-          const selectedNames = e.selected
-            .map((el) => el.dataset.name)
-            .filter((name) => {
-              const file = files.find((f) => f.name === name);
-              return file && !file.isDirectory;
-            });
-          setSelectedFiles(new Set(selectedNames));
-        }}
-      />*/}
 
       <div id="file-list-wrapper">
         <FileSelector

@@ -44,8 +44,13 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     const container = containerRef.current;
     const containerRect = container.getBoundingClientRect();
 
-    const selectableItems =
-      containerRef.current.querySelectorAll("[data-selectable]"); // all selectable items in the container
+    const selectableItems = Array.from(
+      containerRef.current.querySelectorAll("[data-id]")
+    ).filter((item) => {
+      const id = item.dataset.id;
+      const file = items.find((f) => f.name === id);
+      return file && !file.isDirectory; // allow only files; but empty folders are selectable via single selection
+    });
 
     const frameIntersections = []; // to store items that intersect with the selection box
 
@@ -145,6 +150,11 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
 
     // single click selects only that item
     if (!e.ctrlKey && itemId) {
+      const file = items.find((f) => f.name === itemId);
+      if (!file || (file.isDirectory && !file.isEmptyFolder)) {
+        return; // ignore non-empty folders
+      }
+
       onSelectionChange(new Set([itemId]));
       return;
     }
