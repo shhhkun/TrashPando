@@ -47,8 +47,21 @@ export default function FileList({
                 }
               }}
             >
-              <div>{file.name}</div>
-              
+              <div
+                title={
+                  file.isDirectory
+                    ? `Created: ${new Date(file.created).toLocaleString()}
+Folders: ${file.folderCount}
+Files: ${file.fileCount}`
+                    : `Name: ${file.name}
+Type: ${file.type}
+Size: ${formatFileSize(file.size)}
+Modified: ${new Date(file.modified).toLocaleString()}`
+                }
+              >
+                {file.name}
+              </div>
+
               <div>{new Date(file.modified).toLocaleDateString()}</div>
 
               <div>

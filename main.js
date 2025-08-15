@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const isDev = !app.isPackaged;
+const mime = require("mime-types");
 require("electron-reload")(__dirname, {
   electron: path.join(__dirname, "node_modules", ".bin", "electron"),
 });
@@ -23,6 +24,26 @@ function createWindow() {
   } else {
     win.loadFile(path.join(__dirname, "renderer", "dist", "index.html"));
   }
+}
+
+function getFolderSize(dirPath) {
+  let totalSize = 0;
+  try {
+    const items = fs.readdirSync(dirPath);
+    for (const item of items) {
+      if (item.toLowerCase() === "desktop.ini") continue;
+      const fullPath = path.join(dirPath, item);
+      const stats = fs.statSync(fullPath);
+      if (stats.isDirectory()) {
+        totalSize += getFolderSize(fullPath);
+      } else {
+        totalSize += stats.size;
+      }
+    }
+  } catch {
+    // ignore inaccessible folders
+  }
+  return totalSize;
 }
 
 // Open folder dialog when renderer asks
@@ -48,12 +69,21 @@ ipcMain.handle("scan-folder", async (event, folderPath) => {
         const stats = fs.statSync(fullPath);
 
         let isEmptyFolder = false;
+        let folderCount = 0;
+        let fileCount = 0;
+        let folderSize = 0;
+
         if (stats.isDirectory()) {
           try {
             const innerFiles = fs
               .readdirSync(fullPath)
               .filter((f) => f.toLowerCase() !== "desktop.ini");
             isEmptyFolder = innerFiles.length === 0;
+            folderCount = innerFiles.filter((f) =>
+              fs.statSync(path.join(fullPath, f)).isDirectory()
+            ).length;
+            fileCount = innerFiles.length - folderCount;
+            //folderSize = getFolderSize(fullPath);
           } catch {
             isEmptyFolder = false; // cannot access folder, mark it as non-empty to prevent deletion
           }
@@ -61,10 +91,14 @@ ipcMain.handle("scan-folder", async (event, folderPath) => {
 
         return {
           name: file,
-          size: stats.size,
+          size: stats.isDirectory() ? folderSize : stats.size,
           isDirectory: stats.isDirectory(),
           modified: stats.mtime,
+          created: stats.birthtime,
+          type: stats.isDirectory() ? "Folder" : mime.lookup(file) || "Unknown",
           isEmptyFolder,
+          folderCount,
+          fileCount,
         };
       } catch {
         return null; // skip files/folders we cannot access
