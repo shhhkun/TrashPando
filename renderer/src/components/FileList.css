@@ -55,6 +55,12 @@
   transition: background-color 0.15s ease;
 }
 
+.file-item > div:first-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .file-item:hover {
   background-color: var(--hoverDarkGrey);
 }

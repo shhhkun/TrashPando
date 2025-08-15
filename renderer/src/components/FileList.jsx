@@ -1,5 +1,13 @@
 import "./FileList.css"; // CSS file for hover/selection
 
+function formatFileSize(bytes) {
+  if (bytes === 0) return "0 bytes";
+  const units = ["bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const size = bytes / Math.pow(1024, i);
+  return `${size.toFixed(1)} ${units[i]}`;
+}
+
 export default function FileList({
   files,
   selectedFiles,
@@ -40,8 +48,17 @@ export default function FileList({
               }}
             >
               <div>{file.name}</div>
+              
               <div>{new Date(file.modified).toLocaleDateString()}</div>
-              <div>{file.size.toLocaleString()} bytes</div>
+
+              <div>
+                {file.isDirectory
+                  ? file.isEmptyFolder
+                    ? "Empty"
+                    : `${file.itemsCount} items`
+                  : formatFileSize(file.size)}
+              </div>
+
               <div
                 style={{
                   display: "flex",
