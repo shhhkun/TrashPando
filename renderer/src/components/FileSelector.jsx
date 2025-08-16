@@ -16,6 +16,11 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
 
   const isSelectingRef = useRef(false);
 
+  const scrollStartRef = useRef(0);
+
+  const dragThreshold = 5; // pixels to consider a drag
+  const [isDragging, setIsDragging] = useState(false);
+
   // update ctrl key state dynamically
   useEffect(() => {
     const handleKeyDown = (e) => e.ctrlKey && setIsCtrlKey(true);
@@ -152,8 +157,13 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     const dx = e.clientX - startPos.x;
     const dy = e.clientY - startPos.y;
 
-    // small threshold to prevent accidental drag
-    if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+    if (
+      (!isDragging && Math.abs(dx) > dragThreshold) ||
+      Math.abs(dy) > dragThreshold
+    ) {
+      setIsDragging(true);
+      isSelectingRef.current = true;
+    }
 
     setCurrentPos({ x: e.clientX, y: e.clientY });
 
@@ -232,6 +242,13 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
 
     const handleScroll = () => {
       if (!isSelectingRef.current) return;
+
+      const scrollDelta = container.scrollTop - scrollStartRef.current;
+
+      setCurrentPos((prev) => ({ ...prev, y: prev.y + scrollDelta }));
+
+      scrollStartRef.current = container.scrollTop;
+
       updateSelection(); // immediate update
     };
 
