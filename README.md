@@ -102,10 +102,12 @@ npm start
     - Not using React Selecto anymore
     - Using component for selecting logic to more easily implement and debug autoscroll, 'ctrl +', and selection persistence
     - Selection is more dynamic, recomputing each frame
-    - Will reimplement autoscroll handling later
+    - Likely issue is how the drag selection box behaves on scroll, it should dynamically increase or decrease its height based on scroll movement to ensure the same intersections exist for files to overlap with
 - [x] Inconsistent file selecting and odd file selection persistence
     - Was due to autoScroll handler (currently commented out to be reimplmented later)
     - Implemented a global onMouseDown handler, to handle out of div selects
+- [ ] 'Ctrl +' behavior:
+    - Holding 'Ctrl +' prevents dynamic drag select/deselect
 
 ---
 
