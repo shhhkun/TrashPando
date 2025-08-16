@@ -61,6 +61,14 @@
   text-overflow: ellipsis;
 }
 
+.type-text {
+  flex: 1;
+  min-width: 0; /* allow shrinking below content width */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .file-item:hover {
   background-color: var(--hoverDarkGrey);
 }

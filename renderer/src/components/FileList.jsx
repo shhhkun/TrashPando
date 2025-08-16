@@ -1,4 +1,6 @@
-import "./FileList.css"; // CSS file for hover/selection
+import "../styles/FileList.css"; // CSS file for hover/selection
+import "../utils/friendlyFileTypes"; // import friendly file types utility
+import { getFriendlyFileType } from "../utils/friendlyFileTypes";
 
 function formatFileSize(bytes) {
   if (bytes === 0) return "0 bytes";
@@ -54,7 +56,7 @@ export default function FileList({
 Folders: ${file.folderCount}
 Files: ${file.fileCount}`
                     : `Name: ${file.name}
-Type: ${file.type}
+Type: ${getFriendlyFileType(file.type, file.isDirectory)}
 Size: ${formatFileSize(file.size)}
 Modified: ${new Date(file.modified).toLocaleString()}`
                 }
@@ -68,7 +70,7 @@ Modified: ${new Date(file.modified).toLocaleString()}`
                 {file.isDirectory
                   ? file.isEmptyFolder
                     ? "Empty"
-                    : `${file.itemsCount} items`
+                    : `${file.folderCount + file.fileCount} items`
                   : formatFileSize(file.size)}
               </div>
 
@@ -77,9 +79,12 @@ Modified: ${new Date(file.modified).toLocaleString()}`
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  minWidth: 0,
                 }}
               >
-                <span>{file.isDirectory ? "Folder" : "File"}</span>
+                <span className="type-text">
+                  {getFriendlyFileType(file.type, file.isDirectory)}
+                </span>
                 {file.isDirectory && (
                   <span
                     className="open-btn"
