@@ -56,14 +56,10 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     selectableItems.forEach((item) => {
       const rect = item.getBoundingClientRect();
 
-      const itemTop =
-        rect.top - containerRect.top + containerRef.current.scrollTop;
-      const itemBottom =
-        rect.bottom - containerRect.top + containerRef.current.scrollTop;
-      const itemLeft =
-        rect.left - containerRect.left + containerRef.current.scrollLeft;
-      const itemRight =
-        rect.right - containerRect.left + containerRef.current.scrollLeft;
+      const itemTop = rect.top - containerRect.top + container.scrollTop;
+      const itemBottom = rect.bottom - containerRect.top + container.scrollTop;
+      const itemLeft = rect.left - containerRect.left + container.scrollLeft;
+      const itemRight = rect.right - containerRect.left + container.scrollLeft;
 
       // convert band (viewport) into the same container-relative space
       const bandTop = minY - containerRect.top + container.scrollTop;
@@ -82,16 +78,13 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
       }
     });
 
-    // build next selection from drag start + current intersections
-    const next = new Set(isCtrlKey ? dragStartSelectionRef.current : new Set());
-    // recomputes selection each frame
-    frameIntersections.forEach((id) => {
-      if (dragStartSelectionRef.current.has(id)) next.delete(id);
-      else next.add(id);
-    });
+    // Ctrl + drag should append to existing selection, normal drag replaces
+    const next = new Set(dragStartSelectionRef.current);
 
-    onSelectionChange(next); // notify parent of changes
-  }, [isCtrlKey, startPos, currentPos]);
+    frameIntersections.forEach((id) => next.add(id));
+
+    onSelectionChange(next);
+  }, [startPos, currentPos]);
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
@@ -151,8 +144,6 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
         display: "block",
       });
     }
-
-    //autoScrollLoop(); // start continuous scroll watcher
   };
 
   const handleMouseMove = (e) => {
