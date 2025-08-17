@@ -1,37 +1,28 @@
-import { useState, useRef, useEffect } from "react";
-import FileSelector from "./components/FileSelector";
-import FileList from "./components/FileList";
-import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
-import Toast from "./components/Toast";
+import { useState, useEffect } from "react";
+import FileExplorer from "./components/FileExplorer";
 
-const pandaGreen = "rgb(76, 175, 80)"; // fresh green border for selected
-const darkGrey = "rgb(34, 34, 34)"; // main bg color (dark grey)
-const hoverDarkGrey = "rgb(54, 54, 54)"; // hover bg color (lighter dark grey)
-const lightText = "rgba(230, 230, 230, 1)"; // text color (light)
+const darkGrey = "rgb(34, 34, 34)";
+const lightText = "rgba(230, 230, 230, 1)";
 
 function App() {
-  const fileListRef = useRef(null);
-  const selectoRef = useRef(null);
-
+  const [activeTab, setActiveTab] = useState("overview");
+  const [expandedGroup, setExpandedGroup] = useState("dashboard");
+  const [commonFolders, setCommonFolders] = useState({});
   const [folderPath, setFolderPath] = useState(null);
-  const [files, setFiles] = useState([]);
-  const [selectedFiles, setSelectedFiles] = useState(new Set());
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [toastMsg, setToastMsg] = useState(null);
-  const [toastType, setToastType] = useState("info");
-  const [filesToDelete, setFilesToDelete] = useState([]); // snapshot of files to delete
-  const [pathSeparator, setPathSeparator] = useState("/"); // default
 
-  useEffect(() => {
-    async function fetchSeparator() {
-      const sep = await window.electronAPI.getPathSeparator();
-      setPathSeparator(sep);
-    }
-    fetchSeparator();
-  }, []);
+  const dashboardItems = [
+    "Installed Apps",
+    "Documents",
+    "Pictures",
+    "Videos",
+    "Music",
+  ];
 
-  const [commonFolders, setCommonFolders] = useState({}); // fetch common folder paths
+  const toggleGroup = (groupName) => {
+    setExpandedGroup(expandedGroup === groupName ? null : groupName);
+  };
 
+  // fetch common folders dynamically
   useEffect(() => {
     async function fetchCommonFolders() {
       const folders = await window.electronAPI.getCommonFolders();
@@ -40,215 +31,150 @@ function App() {
     fetchCommonFolders();
   }, []);
 
-  // debug
-  /*
-  useEffect(() => {
-    const container = fileListRef.current;
-    const selectoInstance = selectoRef.current;
-
-    console.log("fileListRef.current:", container);
-    console.log(
-      "Is fileListRef an HTMLElement?",
-      container instanceof HTMLElement
-    );
-
-    console.log("selectoRef.current:", selectoInstance);
-    console.log(
-      "Is Selecto dragContainer an HTMLElement?",
-      selectoInstance?.props.dragContainer instanceof HTMLElement
-    );
-
-    if (container) {
-      console.log("scrollTop:", container.scrollTop);
-      console.log("scrollHeight:", container.scrollHeight);
-      console.log("clientHeight:", container.clientHeight);
-    } else {
-      console.warn("fileListRef.current is null!");
-    }
-
-    if (!selectoInstance?.props.dragContainer) {
-      console.warn("Selecto dragContainer is null or undefined!");
-    }
-  }, [fileListRef.current, selectoRef.current]);
-  */
-
-  async function handleSelectFolder() {
-    const path = await window.electronAPI.selectFolder();
-    setFolderPath(path);
-    if (path) {
-      const scannedFiles = await window.electronAPI.scanFolder(path);
-      setFiles(scannedFiles);
-      setSelectedFiles(new Set());
-    } else {
-      setFiles([]);
-      setSelectedFiles(new Set());
-    }
-  }
-
-  async function confirmDelete() {
-    setShowConfirm(false);
-
-    // filter out non-empty folders before deleting
-    const filteredToDelete = filesToDelete.filter((fileName) => {
-      const file = files.find((f) => f.name === fileName);
-      // allow deleting if not folder or empty folder
-      return !(file.isDirectory && file.isEmptyFolder === false);
-    });
-
-    // if nothing left to delete, notify and abort
-    if (filteredToDelete.length === 0) {
-      setToastMsg("No deletable files selected.");
-      setToastType("info");
-      setTimeout(() => setToastMsg(null), 3000);
-      return;
-    }
-
-    // ensure proper file paths for OS
-    const pathsToDelete = filesToDelete.map((name) =>
-      folderPath.endsWith(pathSeparator)
-        ? `${folderPath}${name}`
-        : `${folderPath}${pathSeparator}${name}`
-    );
-
-    console.log("Selected files:", filesToDelete);
-    console.log("Folder path:", folderPath);
-    console.log("Paths to delete:", pathsToDelete);
-
-    try {
-      const result = await window.electronAPI.deleteFiles(pathsToDelete);
-
-      if (result.success) {
-        const deletedCount = filesToDelete.length;
-        setToastMsg(
-          `Deleted ${deletedCount} file${deletedCount > 1 ? "s" : ""}`
-        );
-        setToastType("info");
-
-        // update UI to remove deleted files
-        setFiles((prev) => prev.filter((f) => !filesToDelete.includes(f.name)));
-        setSelectedFiles(new Set());
-      } else {
-        setToastMsg(`Error deleting files: ${result.error}`);
-        setToastType("error");
-      }
-    } catch (err) {
-      setToastMsg(`Unexpected error: ${err.message}`);
-      setToastType("error");
-    }
-
-    setTimeout(() => setToastMsg(null), 3000); // auto dismiss toast
-  }
-
   return (
     <div
       style={{
-        padding: 20,
-        fontFamily: "sans-serif",
-        backgroundColor: darkGrey,
-        color: lightText,
+        display: "flex",
         height: "100vh",
         width: "100vw",
-        boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column", // stack children vertically
-        alignItems: "center", // center horizontally
+        backgroundColor: darkGrey,
+        color: lightText,
       }}
     >
-      <h1>Trashu🐼</h1>
-
-      <div style={{ display: "flex", gap: "10px" }}>
-        {/* Select Folder */}
-        <button className="no-drag" onClick={handleSelectFolder}>
-          Select Folder
-        </button>
-
-        {/* Delete Button */}
-        <button
-          className="no-drag"
-          onClick={() => {
-            setFilesToDelete(Array.from(selectedFiles));
-            setShowConfirm(true);
-          }}
-          disabled={selectedFiles.size === 0}
-          style={{ marginLeft: 10 }}
-        >
-          Delete Selected
-        </button>
-      </div>
-
-      {/* Common Folders Buttons */}
+      {/* Sidebar */}
       <div
-        style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}
+        style={{
+          width: "250px",
+          backgroundColor: "#222",
+          padding: "20px",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
-        {Object.entries(commonFolders).map(([key, folder]) => (
+        {/* Dashboard Group */}
+        <div>
           <button
-            key={key}
-            className="no-drag"
-            onClick={async () => {
-              setFolderPath(folder);
-              const scannedFiles = await window.electronAPI.scanFolder(folder);
-              setFiles(scannedFiles);
-              setSelectedFiles(new Set());
+            style={{
+              width: "100%",
+              textAlign: "left",
+              padding: "8px",
+              fontWeight: "bold",
+              background: "none",
+              border: "none",
+              color: lightText,
+              cursor: "pointer",
             }}
+            onClick={() => toggleGroup("dashboard")}
           >
-            {key.charAt(0).toUpperCase() + key.slice(1)}
+            Dashboard {expandedGroup === "dashboard" ? "▼" : "▶"}
           </button>
-        ))}
+          {expandedGroup === "dashboard" && (
+            <div
+              style={{
+                marginLeft: "10px",
+                display: "flex",
+                flexDirection: "column",
+                paddingTop: "12px",
+                gap: "4px",
+              }}
+            >
+              {dashboardItems.map((item) => (
+                <button
+                  key={item}
+                  onClick={() =>
+                    setActiveTab(item.toLowerCase().replace(/ /g, ""))
+                  }
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* File Explorer */}
+        <div style={{ marginTop: "20px" }}>
+          <button
+            style={{
+              width: "100%",
+              textAlign: "left",
+              padding: "8px",
+              fontWeight: "bold",
+              background: "none",
+              border: "none",
+              color: lightText,
+              cursor: "pointer",
+            }}
+            onClick={() => toggleGroup("fileExplorer")}
+          >
+            File Explorer {expandedGroup === "fileExplorer" ? "▼" : "▶"}
+          </button>
+          {expandedGroup === "fileExplorer" && (
+            <div
+              style={{
+                marginLeft: "10px",
+                display: "flex",
+                flexDirection: "column",
+                paddingTop: "12px",
+                gap: "4px",
+              }}
+            >
+              {Object.entries(commonFolders).map(([name, path]) => (
+                <button
+                  key={name}
+                  onClick={() => {
+                    setFolderPath(path); // <-- sets the folderPath in App.jsx
+                    setActiveTab("files"); // <-- switches main panel to FileExplorer
+                  }}
+                >
+                  {name.charAt(0).toUpperCase() + name.slice(1)}
+                </button>
+              ))}
+              {/* Optional: Custom Path button */}
+              <button onClick={() => setActiveTab("files")}>
+                Custom Path…
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Folder Contents */}
-      <div style={{ marginTop: 20, fontStyle: "italic" }}>
-        {folderPath || "No folder selected"}
-      </div>
-
-      <div id="file-list-wrapper">
-        <FileSelector
-          containerRef={fileListRef}
-          items={files}
-          selectedIds={selectedFiles}
-          render={(items, selectedIds) => (
-            <FileList
-              files={items}
-              selectedFiles={selectedIds}
-              toggleSelectFile={(fileName) => {
-                // let FileSelector handle selection
-                const item = files.find((f) => f.name === fileName);
-                if (!item || (item.isDirectory && !item.isEmptyFolder)) return;
-              }}
-              listRef={fileListRef}
-              onOpenFolder={async (folderName) => {
-                const newPath = folderPath.endsWith(pathSeparator)
-                  ? `${folderPath}${folderName}`
-                  : `${folderPath}${pathSeparator}${folderName}`;
-
-                const scannedFiles = await window.electronAPI.scanFolder(
-                  newPath
-                );
-                setFolderPath(newPath);
-                setFiles(scannedFiles);
-                setSelectedFiles(new Set());
-              }}
+      {/* Main Panel */}
+      <div style={{ flex: 1, backgroundColor: "#333", padding: "20px" }}>
+        <div className="h-14 border-b border-gray-800 flex items-center px-4">
+          <h1 className="text-xl font-semibold capitalize">{activeTab}</h1>
+        </div>
+        <div className="flex-1 overflow-auto p-4">
+          {activeTab === "overview" && (
+            <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
+              <h2 className="font-semibold">Storage Overview</h2>
+              <p className="text-sm text-gray-400">
+                (placeholder for graphs + smart suggestions)
+              </p>
+            </div>
+          )}
+          {activeTab === "files" && (
+            <FileExplorer
+              folderPath={folderPath}
+              setFolderPath={setFolderPath}
             />
           )}
-          onSelectionChange={(newSelection) =>
-            setSelectedFiles(new Set(newSelection))
-          }
-        />
+          {activeTab === "apps" && (
+            <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
+              <h2 className="font-semibold">Installed Apps</h2>
+              <p className="text-sm text-gray-400">
+                (placeholder for app data)
+              </p>
+            </div>
+          )}
+          {activeTab === "settings" && (
+            <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
+              <h2 className="font-semibold">Settings</h2>
+              <p className="text-sm text-gray-400">(theme, preferences)</p>
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Confirm Delete Form/Modal */}
-      <ConfirmDeleteModal
-        visible={showConfirm}
-        count={selectedFiles.size}
-        onConfirm={confirmDelete}
-        onCancel={() => setShowConfirm(false)}
-      />
-
-      <Toast
-        message={toastMsg}
-        type={toastType}
-        onClose={() => setToastMsg(null)}
-      />
     </div>
   );
 }
