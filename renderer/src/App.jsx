@@ -9,6 +9,10 @@ function App() {
   const [expandedGroup, setExpandedGroup] = useState("dashboard");
   const [commonFolders, setCommonFolders] = useState({});
   const [folderPath, setFolderPath] = useState(null);
+  const [expandedGroups, setExpandedGroups] = useState({
+    dashboard: true,
+    fileExplorer: false,
+  });
 
   const dashboardItems = [
     "Installed Apps",
@@ -19,7 +23,10 @@ function App() {
   ];
 
   const toggleGroup = (groupName) => {
-    setExpandedGroup(expandedGroup === groupName ? null : groupName);
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupName]: !prev[groupName], // toggle only the clicked group
+    }));
   };
 
   // fetch common folders dynamically
@@ -66,9 +73,9 @@ function App() {
             }}
             onClick={() => toggleGroup("dashboard")}
           >
-            Dashboard {expandedGroup === "dashboard" ? "▼" : "▶"}
+            Dashboard {expandedGroups.dashboard ? "▼" : "▶"}
           </button>
-          {expandedGroup === "dashboard" && (
+          {expandedGroups.dashboard && (
             <div
               style={{
                 marginLeft: "10px",
@@ -107,9 +114,9 @@ function App() {
             }}
             onClick={() => toggleGroup("fileExplorer")}
           >
-            File Explorer {expandedGroup === "fileExplorer" ? "▼" : "▶"}
+            File Explorer {expandedGroups.fileExplorer ? "▼" : "▶"}
           </button>
-          {expandedGroup === "fileExplorer" && (
+          {expandedGroups.fileExplorer && (
             <div
               style={{
                 marginLeft: "10px",
