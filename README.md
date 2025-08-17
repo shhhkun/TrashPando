@@ -1,7 +1,7 @@
-# Trashu — A Smart Desktop Storage Cleaner
+# Trashu — A Smart Desktop Storage Manager
 
-## Overview  
-Trashu is a desktop app built with Electron that helps users clean up their storage by finding duplicate, unused, or forgotten files. With plans to integrate smart metrics, including last access and usage time, the app aims to provide suggestions that simplify and optimize disk cleanup.
+## Overview
+Trashu is a desktop application designed to help users efficiently manage their storage. Built with Electron, it scans folders for duplicate, unused, and large files, providing clear insights and safe cleanup options. Trashu aims to go beyond basic file deletion by introducing smart metrics—such as last access time and usage frequency—to deliver personalized recommendations for organizing photos, games, documents, and more.
 
 *Built with: Electron, Node.js, React, Vite, JavaScript, Tailwind CSS*
 
@@ -79,6 +79,9 @@ npm start
 - Advanced metrics?
     - Screentime/usage time to be incorporated into suggestion logic
     - Perhaps fetch info from other OS apps such as Task Manager
+- More file select shortcuts/optimizations:
+    - Shift + click range selection
+    - Dynamic selection box whilst scrolling & autoscroll
 
 ---
 
@@ -90,8 +93,23 @@ npm start
     - Will later make it togglable in settings for power users
 - [ ] Duplicate detection & improve metadata collection
 - [ ] Smart metrics integration (last access time, usage frequency)
-- [ ] Packaged installers for Windows/macOS
 - [ ] Panda themed UI (big UI overhaul once core features are implemented and thoroughly tested)
+
+- [ ] Dashboard Implementation:
+    - Documents/Pictures/Videos/Music
+        - Recursive scan of user directories
+        - Sum total size (GB) of each category
+        - Display sum, and have option to view FileList
+    - Other
+        - Separate category from apps, docs, music, temp, etc.
+        - Perform recursive scan at C:\Users\User (or different based on OS)
+        - Display sum, and option to view FileList
+    - Installed Apps (Windows First)
+        - Get registry keys
+        - Pull app name, install date, publisher, estimated date
+        - May need elevated permissions to call app uninstall string
+        - First, simply read installed apps & sizes, and display in dashbaord (with their respective icons)
+        - Later/After, add uninstall feature thats gated behind admin prompts
 
 ---
 
