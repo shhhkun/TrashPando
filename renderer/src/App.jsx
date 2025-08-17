@@ -6,13 +6,22 @@ const lightText = "rgba(230, 230, 230, 1)";
 
 function App() {
   const [activeTab, setActiveTab] = useState("overview");
-  const [expandedGroup, setExpandedGroup] = useState("dashboard");
-  const [commonFolders, setCommonFolders] = useState({});
-  const [folderPath, setFolderPath] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({
     dashboard: true,
     fileExplorer: false,
   });
+
+  const [folderPath, setFolderPath] = useState(null);
+  const [pathSeparator, setPathSeparator] = useState("/");
+  const [commonFolders, setCommonFolders] = useState({});
+
+  const [files, setFiles] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState(new Set());
+
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [toastMsg, setToastMsg] = useState(null);
+  const [toastType, setToastType] = useState("info");
+  const [filesToDelete, setFilesToDelete] = useState([]);
 
   const dashboardItems = [
     "Installed Apps",
@@ -37,6 +46,92 @@ function App() {
     }
     fetchCommonFolders();
   }, []);
+
+  useEffect(() => {
+    // fetch path separator for OS
+    async function fetchSeparator() {
+      const sep = await window.electronAPI.getPathSeparator();
+      setPathSeparator(sep);
+    }
+    fetchSeparator();
+  }, []);
+
+  useEffect(() => {
+    // fetch common folders
+    async function fetchCommonFolders() {
+      const folders = await window.electronAPI.getCommonFolders();
+      setCommonFolders(folders);
+    }
+    fetchCommonFolders();
+  }, []);
+
+  // scan folder whenever folderPath changes
+  useEffect(() => {
+    if (!folderPath) return;
+    async function scan() {
+      const scannedFiles = await window.electronAPI.scanFolder(folderPath);
+      setFiles(scannedFiles);
+      setSelectedFiles(new Set());
+    }
+    scan();
+  }, [folderPath]);
+
+  async function handleSelectFolder() {
+    const path = await window.electronAPI.selectFolder();
+    setFolderPath(path);
+    if (path) {
+      const scannedFiles = await window.electronAPI.scanFolder(path);
+      setFiles(scannedFiles);
+      setSelectedFiles(new Set());
+    } else {
+      setFiles([]);
+      setSelectedFiles(new Set());
+    }
+  }
+
+  async function confirmDelete() {
+    setShowConfirm(false);
+
+    const filteredToDelete = filesToDelete.filter((fileName) => {
+      const file = files.find((f) => f.name === fileName);
+      return !(file.isDirectory && file.isEmptyFolder === false);
+    });
+
+    if (filteredToDelete.length === 0) {
+      setToastMsg("No deletable files selected.");
+      setToastType("info");
+      setTimeout(() => setToastMsg(null), 3000);
+      return;
+    }
+
+    const pathsToDelete = filesToDelete.map((name) =>
+      folderPath.endsWith(pathSeparator)
+        ? `${folderPath}${name}`
+        : `${folderPath}${pathSeparator}${name}`
+    );
+
+    try {
+      const result = await window.electronAPI.deleteFiles(pathsToDelete);
+
+      if (result.success) {
+        const deletedCount = filesToDelete.length;
+        setToastMsg(
+          `Deleted ${deletedCount} file${deletedCount > 1 ? "s" : ""}`
+        );
+        setToastType("info");
+        setFiles((prev) => prev.filter((f) => !filesToDelete.includes(f.name)));
+        setSelectedFiles(new Set());
+      } else {
+        setToastMsg(`Error deleting files: ${result.error}`);
+        setToastType("error");
+      }
+    } catch (err) {
+      setToastMsg(`Unexpected error: ${err.message}`);
+      setToastType("error");
+    }
+
+    setTimeout(() => setToastMsg(null), 3000);
+  }
 
   return (
     <div
@@ -162,8 +257,25 @@ function App() {
           )}
           {activeTab === "files" && (
             <FileExplorer
+              // navigation props
               folderPath={folderPath}
               setFolderPath={setFolderPath}
+              pathSeparator={pathSeparator}
+              // files
+              files={files}
+              setFiles={setFiles}
+              selectedFiles={selectedFiles}
+              setSelectedFiles={setSelectedFiles}
+              // popups/prompts
+              showConfirm={showConfirm}
+              setShowConfirm={setShowConfirm}
+              toastMsg={toastMsg}
+              setToastMsg={setToastMsg}
+              toastType={toastType}
+              // actions
+              setFilesToDelete={setFilesToDelete}
+              handleSelectFolder={handleSelectFolder}
+              confirmDelete={confirmDelete}
             />
           )}
           {activeTab === "apps" && (
