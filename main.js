@@ -26,24 +26,54 @@ function createWindow() {
   }
 }
 
-function getFolderSize(dirPath) {
+// recursive scan for folder contents + total size
+function scanFolderRecursive(dirPath) {
   let totalSize = 0;
+  const items = [];
+
   try {
-    const items = fs.readdirSync(dirPath);
-    for (const item of items) {
-      if (item.toLowerCase() === "desktop.ini") continue;
-      const fullPath = path.join(dirPath, item);
-      const stats = fs.statSync(fullPath);
+    const files = fs
+      .readdirSync(dirPath)
+      .filter((f) => f.toLowerCase() !== "desktop.ini");
+
+    for (const file of files) {
+      const fullPath = path.join(dirPath, file);
+      let stats;
+      try {
+        stats = fs.statSync(fullPath);
+      } catch {
+        continue; // skip inaccessible files
+      }
+
       if (stats.isDirectory()) {
-        totalSize += getFolderSize(fullPath);
+        const { size: innerSize, files: innerItems } =
+          scanFolderRecursive(fullPath);
+        totalSize += innerSize;
+        items.push({
+          name: file,
+          size: innerSize,
+          isDirectory: true,
+          isEmptyFolder: innerItems.length === 0,
+          folderCount: innerItems.filter((i) => i.isDirectory).length,
+          fileCount: innerItems.filter((i) => !i.isDirectory).length,
+        });
       } else {
         totalSize += stats.size;
+        items.push({
+          name: file,
+          size: stats.size,
+          isDirectory: false,
+          type: mime.lookup(file) || "Unknown",
+          modified: stats.mtime,
+          created: stats.birthtime,
+        });
       }
     }
   } catch {
-    // ignore inaccessible folders
+    // ignore
   }
-  return totalSize;
+
+  return { size: totalSize, files: items };
 }
 
 // Open folder dialog when renderer asks
@@ -83,7 +113,6 @@ ipcMain.handle("scan-folder", async (event, folderPath) => {
               fs.statSync(path.join(fullPath, f)).isDirectory()
             ).length;
             fileCount = innerFiles.length - folderCount;
-            //folderSize = getFolderSize(fullPath);
           } catch {
             isEmptyFolder = false; // cannot access folder, mark it as non-empty to prevent deletion
           }
@@ -143,6 +172,13 @@ ipcMain.handle("get-common-folders", () => {
     music: app.getPath("music"),
     videos: app.getPath("videos"),
   };
+});
+
+// Scan documents (test)
+ipcMain.handle("scan-documents", () => {
+  const docPath = app.getPath("documents");
+  const { size, files } = scanFolderRecursive(docPath);
+  return { path: docPath, size, files };
 });
 
 app.whenReady().then(createWindow);
