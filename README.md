@@ -62,20 +62,29 @@ npm start
 - Show the folder paths included files as well as their metadata (filename, size, filetype)
 
 ### **v1.0 - Navigation, Manipulation, & Selection**
-- Added file deletion
+- Added file selection & deletion
 - Supports multi-file selection, delete confirmation modal, and toast popup messages for number of files removed
 - Implemented drag and select for multiple file selection
     - 'Ctrl +' shortcut for appending selections together
     - Dynamic select/unselect logic based on drag selection box
-- Load/scan common folders on OS as suggested areas of cleaning
+- Load/scan common folders as quick navigations
 
 ### **v1.1 - Upcoming**
-- Smart metrics (suggestion based file cleanup) based on:
+- Updated layout to have a sidebar with primary Dashboard and File Explorer dropdowns
+- Dashboard:
+    - Will include installed apps, documents, other, etc.
+    - Central area for storage management
+- File Explorer:
+    - More free-use file/folder navigator for precise deletion
+- Basic smart metrics (suggestion based file cleanup) based on:
     - Folder contents (empty/non-empty)
     - File size
     - Recently used/modified dates
     - Duplicate files
-- Will adjust suggestions to ignore sensitive/important areas like Systems Files, Device Driver, etc.
+- Moved recursive folder scanning on workers threads
+- Adjusted file scanning to avoid sensitive system files (winattr for Windows, "." prefix for UNIX/Linux/macOS)
+
+### **v?.? - Later Development**
 - Advanced metrics?
     - Screentime/usage time to be incorporated into suggestion logic
     - Perhaps fetch info from other OS apps such as Task Manager
@@ -97,7 +106,7 @@ npm start
 
 - [ ] Dashboard Implementation:
     - Documents/Pictures/Videos/Music
-        - Recursive scan of user directories
+        - Recursive scan of user directories (on worker threads)
         - Sum total size (GB) of each category
         - Display sum, and have option to view FileList
     - Other
@@ -110,6 +119,15 @@ npm start
         - May need elevated permissions to call app uninstall string
         - First, simply read installed apps & sizes, and display in dashbaord (with their respective icons)
         - Later/After, add uninstall feature thats gated behind admin prompts
+
+- [ ] Caching:
+    - Avoid rescanning folders for file/folder size or other metrics if no changes are made on initial load
+    - Watch for folder changes with fs.watch
+
+- [ ] Database:
+    - Could use SQLite
+    - Introduce a App Activity Tracker/Usage Insights?
+    - Allow user to begin tracking apps of their choosing, helpful for understanding workflow or play habits
 
 ---
 
