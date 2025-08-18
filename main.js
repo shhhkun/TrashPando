@@ -6,6 +6,8 @@ const mime = require("mime-types");
 require("electron-reload")(__dirname, {
   electron: path.join(__dirname, "node_modules", ".bin", "electron"),
 });
+const winattr = require("winattr");
+const isWindows = process.platform === "win32";
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -26,39 +28,62 @@ function createWindow() {
   }
 }
 
+function isHiddenOrSystem(fullPath, fileName) {
+  // UNIX/Linux/macOS: hidden files start with dot
+  if (!isWindows && fileName.startsWith(".")) return true;
+
+  // Windows: check hidden/system attributes
+  if (isWindows) {
+    try {
+      const attrs = winattr.getSync(fullPath);
+      return attrs.hidden || attrs.system; // return true if hidden or system attribute is set
+    } catch {
+      return false; // if we can't read attributes, assume not hidden
+    }
+  }
+
+  return false; // not hidden
+}
+
 // recursive scan for folder contents + total size
 function scanFolderRecursive(dirPath) {
-  let totalSize = 0;
   const items = [];
 
+  let visibleSize = 0;
+  let hiddenSize = 0;
+
   try {
-    const files = fs
-      .readdirSync(dirPath)
-      .filter((f) => f.toLowerCase() !== "desktop.ini");
+    const files = fs.readdirSync(dirPath);
 
     for (const file of files) {
       const fullPath = path.join(dirPath, file);
-      let stats;
-      try {
-        stats = fs.statSync(fullPath);
-      } catch {
-        continue; // skip inaccessible files
-      }
+
+      let hidden = isHiddenOrSystem(fullPath, file);
+
+      const stats = fs.statSync(fullPath);
 
       if (stats.isDirectory()) {
-        const { size: innerSize, files: innerItems } =
-          scanFolderRecursive(fullPath);
-        totalSize += innerSize;
+        const {
+          visibleSize: innerVisible,
+          hiddenSize: innerHidden,
+          items: innerItems,
+        } = scanFolderRecursive(fullPath);
+        
+        if (hidden) hiddenSize += innerVisible + innerHidden;
+        else visibleSize += innerVisible;
+
         items.push({
           name: file,
-          size: innerSize,
+          size: innerVisible + innerHidden,
           isDirectory: true,
           isEmptyFolder: innerItems.length === 0,
           folderCount: innerItems.filter((i) => i.isDirectory).length,
           fileCount: innerItems.filter((i) => !i.isDirectory).length,
         });
       } else {
-        totalSize += stats.size;
+        if (hidden) hiddenSize += stats.size;
+        else visibleSize += stats.size;
+
         items.push({
           name: file,
           size: stats.size,
@@ -73,8 +98,9 @@ function scanFolderRecursive(dirPath) {
     // ignore
   }
 
-  return { size: totalSize, files: items };
+  return { visibleSize, hiddenSize, items };
 }
+
 
 // Open folder dialog when renderer asks
 ipcMain.handle("select-folder", async () => {
@@ -93,7 +119,7 @@ ipcMain.handle("scan-folder", async (event, folderPath) => {
 
     const result = files.map((file) => {
       try {
-        if (file.toLowerCase() === "desktop.ini") return null; // ignore desktop.ini (may not be present on all systems?)
+        if (isHiddenOrSystem(folderPath, file)) return null; // ignore hidden/system files
 
         const fullPath = path.join(folderPath, file);
         const stats = fs.statSync(fullPath);
@@ -177,8 +203,8 @@ ipcMain.handle("get-common-folders", () => {
 // Scan documents (test)
 ipcMain.handle("scan-documents", () => {
   const docPath = app.getPath("documents");
-  const { size, files } = scanFolderRecursive(docPath);
-  return { path: docPath, size, files };
+  const { visibleSize, hiddenSize, items } = scanFolderRecursive(docPath);
+  return { path: docPath, visibleSize, hiddenSize, items };
 });
 
 app.whenReady().then(createWindow);

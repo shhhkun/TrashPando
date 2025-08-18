@@ -23,7 +23,8 @@ export default function DashboardCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [totalSize, setTotalSize] = useState(null);
+  const [visibleSize, setVisibleSize] = useState(null);
+  const [hiddenSize, setHiddenSize] = useState(null);
   const cardFileListRef = useRef(null);
 
   // compute recursive size when folderPath changes
@@ -36,7 +37,8 @@ export default function DashboardCard({
         setLoading(true);
         const result = await window.electronAPI.scanRecursive(folderPath);
         if (!isMounted) return;
-        setTotalSize(result.size);
+        setVisibleSize(result.visibleSize);
+        setHiddenSize(result.hiddenSize);
       } catch (err) {
         console.error("Error scanning size:", err);
         setToastMsg(`Error loading ${title}`);
@@ -88,8 +90,8 @@ export default function DashboardCard({
       <div className="text-sm text-gray-400">
         {loading
           ? "Calculating..."
-          : totalSize !== null
-          ? `${(totalSize / 1e9).toFixed(2)} GB`
+          : visibleSize !== null
+          ? `${(visibleSize / 1e9).toFixed(2)} GB / ${(hiddenSize / 1e9).toFixed(2)} GB (hidden/system)`
           : "-"}
       </div>
 
