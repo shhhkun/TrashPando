@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import FileExplorer from "./components/FileExplorer";
+import DashboardCard from "./components/DashboardCard";
 
 const darkGrey = "rgb(34, 34, 34)";
 const lightText = "rgba(230, 230, 230, 1)";
@@ -244,7 +245,7 @@ function App() {
       {/* Main Panel */}
       <div style={{ flex: 1, backgroundColor: "#333", padding: "20px" }}>
         <div className="h-14 border-b border-gray-800 flex items-center px-4">
-          <h1 className="text-xl font-semibold capitalize">{activeTab}</h1>
+          {/*<h1 className="text-xl font-semibold capitalize">{activeTab}</h1>*/}
         </div>
         <div className="flex-1 overflow-auto p-4">
           {activeTab === "overview" && (
@@ -275,6 +276,25 @@ function App() {
               // actions
               setFilesToDelete={setFilesToDelete}
               handleSelectFolder={handleSelectFolder}
+              confirmDelete={confirmDelete}
+            />
+          )}
+          {activeTab === "documents" && (
+            <DashboardCard
+              title="Documents"
+              folderPath={commonFolders.documents}
+              setFolderPath={setFolderPath}
+              files={files}
+              setFiles={setFiles}
+              selectedFiles={selectedFiles}
+              setSelectedFiles={setSelectedFiles}
+              showConfirm={showConfirm}
+              setShowConfirm={setShowConfirm}
+              toastMsg={toastMsg}
+              setToastMsg={setToastMsg}
+              toastType={toastType}
+              setFilesToDelete={setFilesToDelete}
+              pathSeparator={pathSeparator}
               confirmDelete={confirmDelete}
             />
           )}
