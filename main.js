@@ -6,8 +6,9 @@ const mime = require("mime-types");
 require("electron-reload")(__dirname, {
   electron: path.join(__dirname, "node_modules", ".bin", "electron"),
 });
-const winattr = require("winattr");
-const isWindows = process.platform === "win32";
+// const winattr = require("winattr");
+// const isWindows = process.platform === "win32";
+const { Worker } = require("worker_threads");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -28,79 +29,94 @@ function createWindow() {
   }
 }
 
-function isHiddenOrSystem(fullPath, fileName) {
-  // UNIX/Linux/macOS: hidden files start with dot
-  if (!isWindows && fileName.startsWith(".")) return true;
+function runWorker(task, payload) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(path.join(__dirname, "scanWorker.js"));
 
-  // Windows: check hidden/system attributes
-  if (isWindows) {
-    try {
-      const attrs = winattr.getSync(fullPath);
-      return attrs.hidden || attrs.system; // return true if hidden or system attribute is set
-    } catch {
-      return false; // if we can't read attributes, assume not hidden
-    }
-  }
+    worker.once("message", (result) => {
+      resolve(result);
+      worker.terminate();
+    });
 
-  return false; // not hidden
+    worker.once("error", (err) => {
+      reject(err);
+      worker.terminate();
+    });
+
+    worker.postMessage({ task, ...payload });
+  });
 }
 
-// recursive scan for folder contents + total size
-function scanFolderRecursive(dirPath) {
-  const items = [];
+// function isHiddenOrSystem(fullPath, fileName) {
+//   // UNIX/Linux/macOS: hidden files start with dot
+//   if (!isWindows && fileName.startsWith(".")) return true;
 
-  let visibleSize = 0;
-  let hiddenSize = 0;
+//   // Windows: check hidden/system attributes
+//   if (isWindows) {
+//     try {
+//       const attrs = winattr.getSync(fullPath);
+//       return attrs.hidden || attrs.system; // return true if hidden or system attribute is set
+//     } catch {
+//       return false; // if we can't read attributes, assume not hidden
+//     }
+//   }
 
-  try {
-    const files = fs.readdirSync(dirPath);
+//   return false; // not hidden
+// }
 
-    for (const file of files) {
-      const fullPath = path.join(dirPath, file);
+// // recursive scan for folder contents + total size
+// function scanFolderRecursive(dirPath) {
+//   const items = [];
 
-      let hidden = isHiddenOrSystem(fullPath, file);
+//   let visibleSize = 0;
+//   let hiddenSize = 0;
 
-      const stats = fs.statSync(fullPath);
+//   try {
+//     const files = fs.readdirSync(dirPath);
 
-      if (stats.isDirectory()) {
-        const {
-          visibleSize: innerVisible,
-          hiddenSize: innerHidden,
-          items: innerItems,
-        } = scanFolderRecursive(fullPath);
-        
-        if (hidden) hiddenSize += innerVisible + innerHidden;
-        else visibleSize += innerVisible;
+//     for (const file of files) {
+//       const fullPath = path.join(dirPath, file);
+//       let hidden = isHiddenOrSystem(fullPath, file);
+//       const stats = fs.statSync(fullPath);
 
-        items.push({
-          name: file,
-          size: innerVisible + innerHidden,
-          isDirectory: true,
-          isEmptyFolder: innerItems.length === 0,
-          folderCount: innerItems.filter((i) => i.isDirectory).length,
-          fileCount: innerItems.filter((i) => !i.isDirectory).length,
-        });
-      } else {
-        if (hidden) hiddenSize += stats.size;
-        else visibleSize += stats.size;
+//       if (stats.isDirectory()) {
+//         const {
+//           visibleSize: innerVisible,
+//           hiddenSize: innerHidden,
+//           items: innerItems,
+//         } = scanFolderRecursive(fullPath);
 
-        items.push({
-          name: file,
-          size: stats.size,
-          isDirectory: false,
-          type: mime.lookup(file) || "Unknown",
-          modified: stats.mtime,
-          created: stats.birthtime,
-        });
-      }
-    }
-  } catch {
-    // ignore
-  }
+//         if (hidden) hiddenSize += innerVisible + innerHidden;
+//         else visibleSize += innerVisible;
 
-  return { visibleSize, hiddenSize, items };
-}
+//         items.push({
+//           name: file,
+//           size: innerVisible + innerHidden,
+//           isDirectory: true,
+//           isEmptyFolder: innerItems.length === 0,
+//           folderCount: innerItems.filter((i) => i.isDirectory).length,
+//           fileCount: innerItems.filter((i) => !i.isDirectory).length,
+//         });
+//       } else {
+//         if (hidden) hiddenSize += stats.size;
+//         else visibleSize += stats.size;
 
+//         items.push({
+//           name: file,
+//           size: stats.size,
+//           isDirectory: false,
+//           type: mime.lookup(file) || "Unknown",
+//           modified: stats.mtime,
+//           created: stats.birthtime,
+//         });
+//       }
+//     }
+//   } catch {
+//     // ignore
+//   }
+
+//   return { visibleSize, hiddenSize, items };
+// }
 
 // Open folder dialog when renderer asks
 ipcMain.handle("select-folder", async () => {
@@ -110,62 +126,62 @@ ipcMain.handle("select-folder", async () => {
   return result.filePaths[0] || null;
 });
 
-// Handle scanning folder for files
-ipcMain.handle("scan-folder", async (event, folderPath) => {
-  if (!folderPath) return [];
+// // Handle scanning folder for files
+// ipcMain.handle("scan-folder", async (event, folderPath) => {
+//   if (!folderPath) return [];
 
-  try {
-    const files = fs.readdirSync(folderPath);
+//   try {
+//     const files = fs.readdirSync(folderPath);
 
-    const result = files.map((file) => {
-      try {
-        if (isHiddenOrSystem(folderPath, file)) return null; // ignore hidden/system files
+//     const result = files.map((file) => {
+//       try {
+//         if (isHiddenOrSystem(folderPath, file)) return null; // ignore hidden/system files
 
-        const fullPath = path.join(folderPath, file);
-        const stats = fs.statSync(fullPath);
+//         const fullPath = path.join(folderPath, file);
+//         const stats = fs.statSync(fullPath);
 
-        let isEmptyFolder = false;
-        let folderCount = 0;
-        let fileCount = 0;
-        let folderSize = 0;
+//         let isEmptyFolder = false;
+//         let folderCount = 0;
+//         let fileCount = 0;
+//         let folderSize = 0;
 
-        if (stats.isDirectory()) {
-          try {
-            const innerFiles = fs
-              .readdirSync(fullPath)
-              .filter((f) => f.toLowerCase() !== "desktop.ini");
-            isEmptyFolder = innerFiles.length === 0;
-            folderCount = innerFiles.filter((f) =>
-              fs.statSync(path.join(fullPath, f)).isDirectory()
-            ).length;
-            fileCount = innerFiles.length - folderCount;
-          } catch {
-            isEmptyFolder = false; // cannot access folder, mark it as non-empty to prevent deletion
-          }
-        }
+//         if (stats.isDirectory()) {
+//           try {
+//             const innerFiles = fs
+//               .readdirSync(fullPath)
+//               .filter((f) => f.toLowerCase() !== "desktop.ini");
+//             isEmptyFolder = innerFiles.length === 0;
+//             folderCount = innerFiles.filter((f) =>
+//               fs.statSync(path.join(fullPath, f)).isDirectory()
+//             ).length;
+//             fileCount = innerFiles.length - folderCount;
+//           } catch {
+//             isEmptyFolder = false; // cannot access folder, mark it as non-empty to prevent deletion
+//           }
+//         }
 
-        return {
-          name: file,
-          size: stats.isDirectory() ? folderSize : stats.size,
-          isDirectory: stats.isDirectory(),
-          modified: stats.mtime,
-          created: stats.birthtime,
-          type: stats.isDirectory() ? "Folder" : mime.lookup(file) || "Unknown",
-          isEmptyFolder,
-          folderCount,
-          fileCount,
-        };
-      } catch {
-        return null; // skip files/folders we cannot access
-      }
-    });
+//         return {
+//           name: file,
+//           size: stats.isDirectory() ? folderSize : stats.size,
+//           isDirectory: stats.isDirectory(),
+//           modified: stats.mtime,
+//           created: stats.birthtime,
+//           type: stats.isDirectory() ? "Folder" : mime.lookup(file) || "Unknown",
+//           isEmptyFolder,
+//           folderCount,
+//           fileCount,
+//         };
+//       } catch {
+//         return null; // skip files/folders we cannot access
+//       }
+//     });
 
-    return result.filter(Boolean); // remove nulls
-  } catch (err) {
-    console.error("Error scanning folder:", err);
-    return [];
-  }
-});
+//     return result.filter(Boolean); // remove nulls
+//   } catch (err) {
+//     console.error("Error scanning folder:", err);
+//     return [];
+//   }
+// });
 
 // Handle file deletion
 ipcMain.handle("delete-files", async (event, filePaths) => {
@@ -200,11 +216,23 @@ ipcMain.handle("get-common-folders", () => {
   };
 });
 
-// Scan documents (test)
-ipcMain.handle("scan-documents", () => {
+// // Scan documents (test)
+// ipcMain.handle("scan-documents", () => {
+//   const docPath = app.getPath("documents");
+//   const { visibleSize, hiddenSize, items } = scanFolderRecursive(docPath);
+//   return { path: docPath, visibleSize, hiddenSize, items };
+// });
+
+ipcMain.handle("scan-folder", async (event, folderPath) => {
+  if (!folderPath) return [];
+  const result = await runWorker("scan", { dir: folderPath, recursive: false });
+  return result.items;
+});
+
+ipcMain.handle("scan-recursive", async () => {
   const docPath = app.getPath("documents");
-  const { visibleSize, hiddenSize, items } = scanFolderRecursive(docPath);
-  return { path: docPath, visibleSize, hiddenSize, items };
+  const result = await runWorker("scan", { dir: docPath, recursive: true });
+  return { path: docPath, ...result };
 });
 
 app.whenReady().then(createWindow);

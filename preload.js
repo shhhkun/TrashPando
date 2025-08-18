@@ -6,5 +6,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
   deleteFiles: (filePaths) => ipcRenderer.invoke("delete-files", filePaths),
   getPathSeparator: () => ipcRenderer.invoke("get-path-sep"),
   getCommonFolders: () => ipcRenderer.invoke("get-common-folders"),
-  scanRecursive: () => ipcRenderer.invoke("scan-documents"),
+  scanRecursive: () => ipcRenderer.invoke("scan-recursive"),
 });
