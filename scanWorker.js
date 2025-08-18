@@ -66,7 +66,7 @@ function scanFolderRecursive(dirPath, recursive = true) {
           modified: stats.mtime,
           created: stats.birthtime,
         });
-        
+
       } else {
         if (hidden) hiddenSize += stats.size;
         else visibleSize += stats.size;
@@ -90,8 +90,8 @@ function scanFolderRecursive(dirPath, recursive = true) {
 
 parentPort.on("message", (payload) => {
     if (payload.task === "scan") {
-        const { dir } = payload;
-        const result = scanFolderRecursive(dir);
+        const { dir, recursive = true } = payload;
+        const result = scanFolderRecursive(dir, recursive);
         parentPort.postMessage(result);
     }
 });
