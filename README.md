@@ -1,149 +1,166 @@
 # Trashu — A Smart Desktop Storage Manager
 
 ## Overview
+
 Trashu is a desktop application designed to help users efficiently manage their storage. Built with Electron, it scans folders for duplicate, unused, and large files, providing clear insights and safe cleanup options. Trashu aims to go beyond basic file deletion by introducing smart metrics—such as last access time and usage frequency—to deliver personalized recommendations for organizing photos, games, documents, and more.
 
-*Built with: Electron, Node.js, React, Vite, JavaScript, Tailwind CSS*
+_Built with: Electron, Node.js, React, Vite, JavaScript, Tailwind CSS_
 
 ---
 
-## Screenshots  
+## Screenshots
 
-*Screenshots coming soon*
+_Screenshots coming soon_
 
 ---
 
-## Features  
-- Select folders to scan for duplicate files  
-- Display file metadata such as size and last modified date  
+## Features
+
+- Select folders to scan for duplicate files
+- Display file metadata such as size and last modified date
 - Basic duplicate detection based on file size and hashing (MD5/SHA256)
-- User-friendly interface to review and delete files safely  
-- Smart recommendations based on file usage  
+- User-friendly interface to review and delete files safely
+- Smart recommendations based on file usage
 
 ---
 
-## Installation & Setup  
+## Installation & Setup
 
-### Prerequisites  
-- Node.js (v16 or higher recommended)  
-- npm (comes with Node.js)  
+### Prerequisites
 
-Clone the repo:  
+- Node.js (v16 or higher recommended)
+- npm (comes with Node.js)
+
+Clone the repo:
+
 ```bash
 git clone https://github.com/yourusername/Trashu.git
 ```
+
 Navigate into the folder:
+
 ```bash
 cd Trashu
 ```
 
 Install dependencies:
+
 ```bash
 npm install
 ```
 
 Start the app:
+
 ```bash
 npm start
 ```
 
 ## Usage
 
-*Detailed instructions coming as features are implemented*
+_Detailed instructions coming as features are implemented_
 
 ---
 
 ## Development Log
 
 ### **v0.1 – Initial Setup**
+
 - Electron app initialized with a window and basic UI
 - Folder selection implemented
 - Display selected folder path
 - Show the folder paths included files as well as their metadata (filename, size, filetype)
 
 ### **v1.0 - Navigation, Manipulation, & Selection**
+
 - Added file selection & deletion
 - Supports multi-file selection, delete confirmation modal, and toast popup messages for number of files removed
 - Implemented drag and select for multiple file selection
-    - 'Ctrl +' shortcut for appending selections together
-    - Dynamic select/unselect logic based on drag selection box
+  - 'Ctrl +' shortcut for appending selections together
+  - Dynamic select/unselect logic based on drag selection box
 - Load/scan common folders as quick navigations
 
 ### **v1.1 - Upcoming**
+
 - Updated layout to have a sidebar with primary Dashboard and File Explorer dropdowns
 - Dashboard:
-    - Will include installed apps, documents, other, etc.
-    - Central area for storage management
+  - Will include installed apps, documents, other, etc.
+  - Central area for storage management
 - File Explorer:
-    - More free-use file/folder navigator for precise deletion
+  - More free-use file/folder navigator for precise deletion
 - Basic smart metrics (suggestion based file cleanup) based on:
-    - Folder contents (empty/non-empty)
-    - File size
-    - Recently used/modified dates
-    - Duplicate files
+  - Folder contents (empty/non-empty)
+  - File size
+  - Recently used/modified dates
+  - Duplicate files
 - Moved recursive folder scanning on workers threads
 - Adjusted file scanning to avoid sensitive system files (winattr for Windows, "." prefix for UNIX/Linux/macOS)
 
 ### **v?.? - Later Development**
+
 - Advanced metrics?
-    - Screentime/usage time to be incorporated into suggestion logic
-    - Perhaps fetch info from other OS apps such as Task Manager
+  - Screentime/usage time to be incorporated into suggestion logic
+  - Perhaps fetch info from other OS apps such as Task Manager
 - More file select shortcuts/optimizations:
-    - Shift + click range selection
-    - Dynamic selection box whilst scrolling & autoscroll
+  - Shift + click range selection
+  - Dynamic selection box whilst scrolling & autoscroll
 
 ---
 
 ## Roadmap
+
 - [x] Implement basic file scanning and metadata collection
 - [ ] File previews and sorting/filtering options
 - [ ] Undo button for last delete action/safety net
-    - Trashing/recycling (depends on OS) items rather than permanent delete currently
-    - Will later make it togglable in settings for power users
+  - Trashing/recycling (depends on OS) items rather than permanent delete currently
+  - Will later make it togglable in settings for power users
 - [ ] Duplicate detection & improve metadata collection
 - [ ] Smart metrics integration (last access time, usage frequency)
 - [ ] Panda themed UI (big UI overhaul once core features are implemented and thoroughly tested)
 
 - [ ] Dashboard Implementation:
-    - Documents/Pictures/Videos/Music
-        - Recursive scan of user directories (on worker threads)
-        - Sum total size (GB) of each category
-        - Display sum, and have option to view FileList
-    - Other
-        - Separate category from apps, docs, music, temp, etc.
-        - Perform recursive scan at C:\Users\User (or different based on OS)
-        - Display sum, and option to view FileList
-    - Installed Apps (Windows First)
-        - Get registry keys
-        - Pull app name, install date, publisher, estimated date
-        - May need elevated permissions to call app uninstall string
-        - First, simply read installed apps & sizes, and display in dashbaord (with their respective icons)
-        - Later/After, add uninstall feature thats gated behind admin prompts
+
+  - Documents/Pictures/Videos/Music
+    - Recursive scan of user directories (on worker threads)
+    - Sum total size (GB) of each category
+    - Display sum, and have option to view FileList
+  - Other
+    - Separate category from apps, docs, music, temp, etc.
+    - Perform recursive scan at C:\Users\User (or different based on OS)
+    - Display sum, and option to view FileList
+  - Installed Apps (Windows First)
+    - Get registry keys
+    - Pull app name, install date, publisher, estimated date
+    - May need elevated permissions to call app uninstall string
+    - First, simply read installed apps & sizes, and display in dashbaord (with their respective icons)
+    - Later/After, add uninstall feature thats gated behind admin prompts
 
 - [ ] Caching:
-    - Avoid rescanning folders for file/folder size or other metrics if no changes are made on initial load
-    - Watch for folder changes with fs.watch
+
+  - Avoid rescanning folders for file/folder size or other metrics if no changes are made on initial load
+  - Watch for folder changes with fs.watch
 
 - [ ] Database:
-    - Could use SQLite
-    - Introduce a App Activity Tracker/Usage Insights?
-    - Allow user to begin tracking apps of their choosing, helpful for understanding workflow or play habits
+
+  - Could use SQLite
+  - Introduce a App Activity Tracker/Usage Insights?
+  - Allow user to begin tracking apps of their choosing, helpful for understanding workflow or play habits
 
 ---
 
 ## Known Issues
+
 - [ ] Path separator fetching is a bit unoptimized, check/look into preload.js loading properly as to use electronAPI calls rather than state & useEffect
 - [ ] Common folders scan is somewhat restricted/limited by how its defined in main.js, possibly allow user to add their own preference of common folders
 - [ ] File selecting whilst scrolling
-    - Not using React Selecto anymore
-    - Using component for selecting logic to more easily implement and debug autoscroll, 'ctrl +', and selection persistence
-    - Selection is more dynamic, recomputing each frame
-    - Likely issue is how the drag selection box behaves on scroll, it should dynamically increase or decrease its height based on scroll movement to ensure the same intersections exist for files to overlap with
+  - Not using React Selecto anymore
+  - Using component for selecting logic to more easily implement and debug autoscroll, 'ctrl +', and selection persistence
+  - Selection is more dynamic, recomputing each frame
+  - Likely issue is how the drag selection box behaves on scroll, it should dynamically increase or decrease its height based on scroll movement to ensure the same intersections exist for files to overlap with
 - [x] Inconsistent file selecting and odd file selection persistence
-    - Was due to autoScroll handler (currently commented out to be reimplmented later)
-    - Implemented a global onMouseDown handler, to handle out of div selects
+  - Was due to autoScroll handler (currently commented out to be reimplmented later)
+  - Implemented a global onMouseDown handler, to handle out of div selects
 - [ ] 'Ctrl +' behavior:
-    - Holding 'Ctrl +' prevents dynamic drag select/deselect
+  - Holding 'Ctrl +' prevents dynamic drag select/deselect
 
 ---
 
