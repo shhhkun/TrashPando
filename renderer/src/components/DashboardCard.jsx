@@ -91,7 +91,7 @@ export default function DashboardCard({
         {loading
           ? "Calculating..."
           : visibleSize !== null
-          ? `${(visibleSize / 1e9).toFixed(2)} GB / ${(hiddenSize / 1e9).toFixed(2)} GB (hidden/system)`
+          ? `${(visibleSize / 1e9).toFixed(2)} GB / ${(hiddenSize / 1e3)} KB (hidden/system)`
           : "-"}
       </div>
 
