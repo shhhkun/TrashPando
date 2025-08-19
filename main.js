@@ -99,10 +99,10 @@ ipcMain.handle("scan-folder", async (event, folderPath) => {
   return result.items;
 });
 
-ipcMain.handle("scan-recursive", async () => {
-  const docPath = app.getPath("documents");
-  const result = await runWorker("scan", { dir: docPath, recursive: true });
-  return { path: docPath, ...result };
+ipcMain.handle("scan-recursive", async (event, folderPath) => {
+  if (!folderPath) return { visibleSize: 0, hiddenSize: 0, items: [] };
+  const result = await runWorker("scan", { dir: folderPath, recursive: true });
+  return { path: folderPath, ...result };
 });
 
 app.whenReady().then(createWindow);
