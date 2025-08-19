@@ -21,8 +21,6 @@ function isHiddenOrSystem(fullPath, fileName) {
         logDebug(
           `${fullPath} -> hidden=${attrs.hidden}, system=${attrs.system}`
         );
-      } else {
-        // empty
       }
       return attrs.hidden || attrs.system; // return true if hidden or system attribute is set
     } catch {
@@ -88,7 +86,7 @@ function scanFolderRecursive(dirPath, recursive = true) {
           items.push({
             name: file,
             //size: recursive ? innerVisible + innerHidden : 0,
-            size: 0,
+            //size: 0,
             isDirectory: true,
             isEmptyFolder: innerItems.length === 0,
             folderCount: innerItems.filter((i) => i.isDirectory).length,
@@ -101,14 +99,16 @@ function scanFolderRecursive(dirPath, recursive = true) {
         if (hidden) hiddenSize += stats.size;
         else visibleSize += stats.size;
 
-        items.push({
-          name: file,
-          size: stats.size,
-          isDirectory: false,
-          type: mime.lookup(file) || "Unknown",
-          modified: stats.mtime,
-          created: stats.birthtime,
-        });
+        if (!hidden) {
+          items.push({
+            name: file,
+            size: stats.size,
+            isDirectory: false,
+            type: mime.lookup(file) || "Unknown",
+            modified: stats.mtime,
+            created: stats.birthtime,
+          });
+        }
       }
     }
   } catch {

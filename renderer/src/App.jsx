@@ -183,10 +183,17 @@ function App() {
             >
               {dashboardItems.map((item) => (
                 <button
+                  // key={item}
+                  // onClick={() =>
+                  //   setActiveTab(item.toLowerCase().replace(/ /g, ""))
+                  // }
                   key={item}
-                  onClick={() =>
-                    setActiveTab(item.toLowerCase().replace(/ /g, ""))
-                  }
+                  onClick={() => {
+                    const folderKey = item.toLowerCase();
+                    const folder = commonFolders[folderKey];
+                    setActiveTab(folderKey);
+                    if (folder) setFolderPath(folder); // force folderPath to update
+                  }}
                 >
                   {item}
                 </button>
@@ -282,7 +289,7 @@ function App() {
           {activeTab === "documents" && (
             <DashboardCard
               title="Documents"
-              folderPath={commonFolders.documents}
+              folderPath={folderPath}
               setFolderPath={setFolderPath}
               files={files}
               setFiles={setFiles}
@@ -301,7 +308,7 @@ function App() {
           {activeTab === "pictures" && (
             <DashboardCard
               title="Pictures"
-              folderPath={commonFolders.pictures}
+              folderPath={folderPath}
               setFolderPath={setFolderPath}
               files={files}
               setFiles={setFiles}

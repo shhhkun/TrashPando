@@ -35,8 +35,12 @@ export default function DashboardCard({
     const fetchRecursiveSize = async () => {
       try {
         setLoading(true);
+        
         const result = await window.electronAPI.scanRecursive(folderPath);
+        console.log("DashboardCard", title, "folderPath:", folderPath, "visibleSize:", result.visibleSize);
+
         if (!isMounted) return;
+
         setVisibleSize(result.visibleSize);
         setHiddenSize(result.hiddenSize);
       } catch (err) {
