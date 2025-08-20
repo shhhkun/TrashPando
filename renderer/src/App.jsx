@@ -324,6 +324,44 @@ function App() {
               confirmDelete={confirmDelete}
             />
           )}
+          {activeTab === "videos" && (
+            <DashboardCard
+              title="Videos"
+              folderPath={folderPath}
+              setFolderPath={setFolderPath}
+              files={files}
+              setFiles={setFiles}
+              selectedFiles={selectedFiles}
+              setSelectedFiles={setSelectedFiles}
+              showConfirm={showConfirm}
+              setShowConfirm={setShowConfirm}
+              toastMsg={toastMsg}
+              setToastMsg={setToastMsg}
+              toastType={toastType}
+              setFilesToDelete={setFilesToDelete}
+              pathSeparator={pathSeparator}
+              confirmDelete={confirmDelete}
+            />
+          )}
+          {activeTab === "music" && (
+            <DashboardCard
+              title="Music"
+              folderPath={folderPath}
+              setFolderPath={setFolderPath}
+              files={files}
+              setFiles={setFiles}
+              selectedFiles={selectedFiles}
+              setSelectedFiles={setSelectedFiles}
+              showConfirm={showConfirm}
+              setShowConfirm={setShowConfirm}
+              toastMsg={toastMsg}
+              setToastMsg={setToastMsg}
+              toastType={toastType}
+              setFilesToDelete={setFilesToDelete}
+              pathSeparator={pathSeparator}
+              confirmDelete={confirmDelete}
+            />
+          )}
           {activeTab === "apps" && (
             <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
               <h2 className="font-semibold">Installed Apps</h2>
