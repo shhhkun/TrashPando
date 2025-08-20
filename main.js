@@ -7,18 +7,18 @@ require("electron-reload")(__dirname, {
   electron: path.join(__dirname, "node_modules", ".bin", "electron"),
 });
 const { Worker } = require("worker_threads");
-const chokidar = require("chokidar");
-const watchers = new Map(); // to track folder watchers
+// const chokidar = require("chokidar");
+// const watchers = new Map(); // to track folder watchers
 
-const ignoredFolders = [
-  "Music",
-  "Pictures",
-  "Videos",
-  "My Music",
-  "My Pictures",
-  "My Videos",
-];
-const ignoredRegex = new RegExp(ignoredFolders.join("|"));
+// const ignoredFolders = [
+//   "Music",
+//   "Pictures",
+//   "Videos",
+//   "My Music",
+//   "My Pictures",
+//   "My Videos",
+// ];
+// const ignoredRegex = new RegExp(ignoredFolders.join("|"));
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -43,11 +43,6 @@ function runWorker(task, payload) {
   return new Promise((resolve, reject) => {
     const worker = new Worker(path.join(__dirname, "scanWorker.js"));
 
-    // worker.once("message", (result) => {
-    //   resolve(result);
-    //   worker.terminate();
-    // });
-
     worker.on("message", (msg) => {
       if (msg.type === "log") console.log("WORKER LOG:", msg.message);
       else resolve(msg); // the result of scan
@@ -59,6 +54,24 @@ function runWorker(task, payload) {
     });
 
     worker.postMessage({ task, ...payload });
+  });
+}
+
+function runWatcherWorker(task, folderPath) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(path.join(__dirname, "watcherWorker.js"));
+
+    worker.on("message", (msg) => {
+      // forward to renderer
+      if (msg.folderPath) {
+        worker.eventSender?.send("folder-changed", msg);
+      }
+      resolve(message);
+    });
+
+    worker.once("error", reject);
+
+    worker.postMessage({ task, folderPath });
   });
 }
 
@@ -115,40 +128,50 @@ ipcMain.handle("scan-recursive", async (event, folderPath) => {
   return { path: folderPath, ...result };
 });
 
+// ipcMain.handle("watch-folder", (event, folderPath) => {
+//   if (watchers.has(folderPath)) return; // already watching
+
+//   const watcher = chokidar.watch(folderPath, {
+//     ignoreInitial: true,
+//     ignorePermissionErrors: true,
+//     ignored: ignoredRegex,
+//     //depth: 0,
+//   });
+
+//   let pendingInvalidation = null;
+
+//   watcher.on("all", () => {
+//     if (pendingInvalidation) clearTimeout(pendingInvalidation);
+
+//     pendingInvalidation = setTimeout(() =>{
+//       event.sender.send("folder-changed", { folderPath });
+//       pendingInvalidation = null;
+//     }, 500); // 0.5s debounce
+//   });
+
+//   watcher.on("error", (err) => {
+//     console.warn("[Watcher error]", err.message);
+//   });
+
+//   watchers.set(folderPath, watcher);
+// });
+
+// ipcMain.handle("unwatch-folder", (event, folderPath) => {
+//   const watcher = watchers.get(folderPath);
+//   if (watcher) {
+//     watcher.close();
+//     watchers.delete(folderPath);
+//   }
+// });
+
 ipcMain.handle("watch-folder", (event, folderPath) => {
-  if (watchers.has(folderPath)) return; // already watching
-
-  const watcher = chokidar.watch(folderPath, {
-    ignoreInitial: true,
-    ignorePermissionErrors: true,
-    ignored: ignoredRegex,
-    //depth: 0,
+  runWatcherWorker("watch", folderPath).then(() => {
+    worker.eventSender = event.sender; // attach renderer sender so worker thread can communicate
   });
-
-  let pendingInvalidation = null;
-
-  watcher.on("all", () => {
-    if (pendingInvalidation) clearTimeout(pendingInvalidation);
-
-    pendingInvalidation = setTimeout(() =>{
-      event.sender.send("folder-changed", { folderPath });
-      pendingInvalidation = null;
-    }, 500); // 0.5s debounce
-  });
-
-  watcher.on("error", (err) => {
-    console.warn("[Watcher error]", err.message);
-  });
-
-  watchers.set(folderPath, watcher);
 });
 
 ipcMain.handle("unwatch-folder", (event, folderPath) => {
-  const watcher = watchers.get(folderPath);
-  if (watcher) {
-    watcher.close();
-    watchers.delete(folderPath);
-  }
+  runWatcherWorker("unwatch", folderPath);
 });
 
 app.whenReady().then(createWindow);
