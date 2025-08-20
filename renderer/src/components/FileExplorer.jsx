@@ -61,7 +61,7 @@ export default function FileExplorer({
 
         {/* Sort Dropdown */}
         <select
-          className="no-drag"
+          className="no-drag border rounded px-3 py-1 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={sortField}
           onChange={(e) => setSortField(e.target.value)}
         >

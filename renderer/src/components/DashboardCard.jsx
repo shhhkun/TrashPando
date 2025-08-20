@@ -27,6 +27,18 @@ export default function DashboardCard({
   const [hiddenSize, setHiddenSize] = useState(null);
   const cardFileListRef = useRef(null);
 
+  const [sortField, setSortField] = useState("name");
+  const [sortOrder, setSortOrder] = useState("asc");
+
+  const sortOptions = [
+    { label: "Name", value: "name" },
+    { label: "Date Modified", value: "dateModified" },
+    { label: "Date Created", value: "dateCreated" },
+    { label: "Size", value: "size" },
+    { label: "Type", value: "type" },
+    { label: "Item Count", value: "itemCount" },
+  ];
+
   // compute recursive size when folderPath changes
   useEffect(() => {
     if (!folderPath) return;
@@ -35,9 +47,16 @@ export default function DashboardCard({
     const fetchRecursiveSize = async () => {
       try {
         setLoading(true);
-        
+
         const result = await window.electronAPI.scanRecursive(folderPath);
-        console.log("DashboardCard", title, "folderPath:", folderPath, "visibleSize:", result.visibleSize);
+        console.log(
+          "DashboardCard",
+          title,
+          "folderPath:",
+          folderPath,
+          "visibleSize:",
+          result.visibleSize
+        );
 
         if (!isMounted) return;
 
@@ -95,7 +114,9 @@ export default function DashboardCard({
         {loading
           ? "Calculating..."
           : visibleSize !== null
-          ? `${(visibleSize / 1e9).toFixed(2)} GB / ${(hiddenSize / 1e3)} KB (hidden/system)`
+          ? `${(visibleSize / 1e9).toFixed(2)} GB / ${
+              hiddenSize / 1e3
+            } KB (hidden/system)`
           : "-"}
       </div>
 
@@ -114,6 +135,29 @@ export default function DashboardCard({
             disabled={selectedFiles.size === 0}
           >
             Delete Selected
+          </button>
+
+          {/* Sort Dropdown */}
+          <select
+            className="no-drag border rounded px-3 py-1 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={sortField}
+            onChange={(e) => setSortField(e.target.value)}
+          >
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          {/* Ascending/Descending Toggle */}
+          <button
+            className="no-drag"
+            onClick={() =>
+              setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+            }
+          >
+            {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
           </button>
 
           <FileSelector
@@ -141,6 +185,8 @@ export default function DashboardCard({
                   setFiles(scannedFiles);
                   setSelectedFiles(new Set());
                 }}
+                sortField={sortField}
+                sortOrder={sortOrder}
               />
             )}
             onSelectionChange={(newSelection) =>
