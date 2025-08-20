@@ -1,6 +1,7 @@
 import "../styles/FileList.css"; // CSS file for hover/selection
 import "../utils/friendlyFileTypes"; // import friendly file types utility
 import { getFriendlyFileType } from "../utils/friendlyFileTypes";
+import { useMemo } from "react";
 
 function formatFileSize(bytes) {
   if (bytes === 0) return "0 bytes";
@@ -10,13 +11,64 @@ function formatFileSize(bytes) {
   return `${size.toFixed(1)} ${units[i]}`;
 }
 
+function sortFiles(files, field, direction) {
+  const multiplier = direction === "asc" ? 1 : -1;
+
+  const compare = (a, b) => {
+    // folders pinned to top
+    if (a.isDirectory && !b.isDirectory) return -1;
+    if (!a.isDirectory && b.isDirectory) return 1;
+
+    switch (field) {
+      case "name":
+        return a.name.localeCompare(b.name) * multiplier;
+
+      case "size":
+        if (a.isDirectory && b.isDirectory) {
+          const aCount = (a.folderCount ?? 0) + (a.fileCount ?? 0);
+          const bCount = (b.folderCount ?? 0) + (b.fileCount ?? 0);
+          return (aCount - bCount) * multiplier;
+        } else if (a.isDirectory || b.isDirectory) {
+          return 0; // don’t mix folder vs file size
+        }
+        return (a.size - b.size) * multiplier;
+
+      case "dateModified":
+        return (new Date(a.modified) - new Date(b.modified)) * multiplier;
+
+      case "dateCreated":
+        return (new Date(a.created) - new Date(b.created)) * multiplier;
+
+      case "type":
+        return (a.type || "").localeCompare(b.type || "") * multiplier;
+
+      case "itemCount":
+        const aCount = (a.folderCount ?? 0) + (a.fileCount ?? 0);
+        const bCount = (b.folderCount ?? 0) + (b.fileCount ?? 0);
+        return (aCount - bCount) * multiplier;
+
+      default:
+        return 0;
+    }
+  };
+
+  return [...files].sort(compare);
+}
+
 export default function FileList({
   files,
   selectedFiles,
   toggleSelectFile,
   listRef,
   onOpenFolder,
+  sortField,
+  sortOrder,
 }) {
+  
+  const sortedFiles = useMemo(() => {
+    return sortFiles(files, sortField, sortOrder);
+  }, [files, sortField, sortOrder]);
+
   return (
     <div ref={listRef} className="file-list-container">
       {/* Header bar with vertical separators */}
@@ -28,10 +80,10 @@ export default function FileList({
       </div>
 
       {/* Files list */}
-      {files.length === 0 ? (
+      {sortedFiles.length === 0 ? (
         <div className="file-list-empty">No files to display</div>
       ) : (
-        files.map((file) => {
+        sortedFiles.map((file) => {
           const isSelected = selectedFiles.has(file.name);
 
           return (

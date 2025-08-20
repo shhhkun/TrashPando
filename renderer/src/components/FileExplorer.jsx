@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useState, useRef } from "react";
 import FileSelector from "./FileSelector";
 import FileList from "./FileList";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
@@ -28,6 +28,18 @@ export default function FileExplorer({
 }) {
   const fileListRef = useRef(null);
 
+  const [sortField, setSortField] = useState("name");
+  const [sortOrder, setSortOrder] = useState("asc");
+
+  const sortOptions = [
+    { label: "Name", value: "name" },
+    { label: "Date Modified", value: "dateModified" },
+    { label: "Date Created", value: "dateCreated" },
+    { label: "Size", value: "size" },
+    { label: "Type", value: "type" },
+    { label: "Item Count", value: "itemCount" },
+  ];
+
   return (
     <div className="flex flex-col p-4 gap-4">
       {/* Select Folder and Delete Buttons */}
@@ -45,6 +57,29 @@ export default function FileExplorer({
           disabled={selectedFiles.size === 0}
         >
           Delete Selected
+        </button>
+
+        {/* Sort Dropdown */}
+        <select
+          className="no-drag"
+          value={sortField}
+          onChange={(e) => setSortField(e.target.value)}
+        >
+          {sortOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Ascending/Descending Toggle */}
+        <button
+          className="no-drag"
+          onClick={() =>
+            setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+          }
+        >
+          {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
         </button>
       </div>
 
@@ -77,6 +112,8 @@ export default function FileExplorer({
                 setFiles(scannedFiles);
                 setSelectedFiles(new Set());
               }}
+              sortField={sortField}
+              sortOrder={sortOrder}
             />
           )}
           onSelectionChange={(newSelection) =>
