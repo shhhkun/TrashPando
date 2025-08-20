@@ -3,6 +3,7 @@ import FileSelector from "./FileSelector";
 import FileList from "./FileList";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import Toast from "./Toast";
+import { getFromCache, setInCache, invalidateCache } from "../cache";
 
 export default function DashboardCard({
   title,
@@ -39,29 +40,52 @@ export default function DashboardCard({
     { label: "Item Count", value: "itemCount" },
   ];
 
+  useEffect(() => {
+    if (!folderPath) return;
+
+    const listener = window.electronAPI.onFolderChanged(
+      ({ folderPath: changedPath }) => {
+        if (changedPath === folderPath) {
+          invalidateCache(folderPath);
+        }
+      }
+    );
+
+    return () => {
+      window.electronAPI.offFolderChanged(listener);
+    };
+  }, [folderPath]);
+
   // compute recursive size when folderPath changes
   useEffect(() => {
     if (!folderPath) return;
 
     let isMounted = true;
+
     const fetchRecursiveSize = async () => {
       try {
         setLoading(true);
 
-        const result = await window.electronAPI.scanRecursive(folderPath);
-        console.log(
-          "DashboardCard",
-          title,
-          "folderPath:",
-          folderPath,
-          "visibleSize:",
-          result.visibleSize
-        );
+        const cached = getFromCache(folderPath);
+        if (cached) {
+          setVisibleSize(cached.visibleSize);
+          setHiddenSize(cached.hiddenSize);
+          //setFiles(cached.files || []);
+        } else {
+          const result = await window.electronAPI.scanRecursive(folderPath);
+          if (!isMounted) return;
 
-        if (!isMounted) return;
+          setVisibleSize(result.visibleSize);
+          setHiddenSize(result.hiddenSize);
+          setInCache(folderPath, {
+            //files: result.items,
+            visibleSize: result.visibleSize,
+            hiddenSize: result.hiddenSize,
+          });
 
-        setVisibleSize(result.visibleSize);
-        setHiddenSize(result.hiddenSize);
+          // start watcher after initial scan
+          window.electronAPI.watchFolder(folderPath);
+        }
       } catch (err) {
         console.error("Error scanning size:", err);
         setToastMsg(`Error loading ${title}`);
@@ -71,6 +95,7 @@ export default function DashboardCard({
     };
 
     fetchRecursiveSize();
+
     return () => {
       isMounted = false;
     };
@@ -149,6 +174,10 @@ export default function DashboardCard({
               </option>
             ))}
           </select>
+
+          <button onClick={() => setFolderPath(folderPath)}>
+            Refresh Size
+          </button>
 
           {/* Ascending/Descending Toggle */}
           <button
