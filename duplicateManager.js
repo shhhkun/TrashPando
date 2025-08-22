@@ -2,20 +2,31 @@ import fs from "fs";
 import path from "path";
 import { hashFile } from "./renderer/src/utils/hash.js";
 
-export async function findDuplicates(folderPath, options = { matchExtension: true }) {
+export async function findDuplicates(
+  folderPath,
+  options = { matchExtension: true }
+) {
   const hashMap = new Map();
 
   async function traverse(currentPath) {
     const items = await fs.promises.readdir(currentPath, {
       withFileTypes: true,
     });
+    console.log("currentPath: ", currentPath);
 
     for (const item of items) {
       const fullPath = path.join(currentPath, item.name);
 
-      if (item.isDirectory) {
+      if (item.isDirectory()) {
+        // skip unwanted directories
+        const dirName = path.basename(fullPath);
+        if (dirName === "node_modules" || dirName === ".git") {
+          return; // skip this directory
+        }
+
         await traverse(fullPath); // recurse into folder and wait till cleared
       } else if (item.isFile()) {
+        console.log("Traversing:", currentPath);
         const stats = await fs.promises.stat(fullPath); // get file stats/metadata
 
         if (stats.size === 0) continue; // skip empty files
