@@ -57,16 +57,17 @@ function runWorker(task, payload) {
   });
 }
 
-function runWatcherWorker(task, folderPath) {
+function runWatcherWorker(task, folderPath, sender) {
   return new Promise((resolve, reject) => {
     const worker = new Worker(path.join(__dirname, "watcherWorker.js"));
 
     worker.on("message", (msg) => {
       // forward to renderer
-      if (msg.folderPath) {
-        worker.eventSender?.send("folder-changed", msg);
+      if (msg.folderPath && sender) {
+        sender.send("folder-changed", msg);
+        //worker.eventSender?.send("folder-changed", msg);
       }
-      resolve(message);
+      resolve(msg);
     });
 
     worker.once("error", reject);
@@ -128,46 +129,10 @@ ipcMain.handle("scan-recursive", async (event, folderPath) => {
   return { path: folderPath, ...result };
 });
 
-// ipcMain.handle("watch-folder", (event, folderPath) => {
-//   if (watchers.has(folderPath)) return; // already watching
-
-//   const watcher = chokidar.watch(folderPath, {
-//     ignoreInitial: true,
-//     ignorePermissionErrors: true,
-//     ignored: ignoredRegex,
-//     //depth: 0,
-//   });
-
-//   let pendingInvalidation = null;
-
-//   watcher.on("all", () => {
-//     if (pendingInvalidation) clearTimeout(pendingInvalidation);
-
-//     pendingInvalidation = setTimeout(() =>{
-//       event.sender.send("folder-changed", { folderPath });
-//       pendingInvalidation = null;
-//     }, 500); // 0.5s debounce
-//   });
-
-//   watcher.on("error", (err) => {
-//     console.warn("[Watcher error]", err.message);
-//   });
-
-//   watchers.set(folderPath, watcher);
-// });
-
-// ipcMain.handle("unwatch-folder", (event, folderPath) => {
-//   const watcher = watchers.get(folderPath);
-//   if (watcher) {
-//     watcher.close();
-//     watchers.delete(folderPath);
-//   }
-// });
-
 ipcMain.handle("watch-folder", (event, folderPath) => {
-  runWatcherWorker("watch", folderPath).then(() => {
-    worker.eventSender = event.sender; // attach renderer sender so worker thread can communicate
-  });
+  runWatcherWorker("watch", folderPath, event.sender);
+  //   worker.eventSender = event.sender; // attach renderer sender so worker thread can communicate
+  // });
 });
 
 ipcMain.handle("unwatch-folder", (event, folderPath) => {

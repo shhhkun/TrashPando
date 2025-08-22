@@ -18,13 +18,13 @@ function isHiddenOrSystem(fullPath, fileName) {
     try {
       const attrs = winattr.getSync(fullPath);
       if (attrs.hidden || attrs.system) {
-        logDebug(
-          `${fullPath} -> hidden=${attrs.hidden}, system=${attrs.system}`
-        );
+        // logDebug(
+        //   `${fullPath} -> hidden=${attrs.hidden}, system=${attrs.system}`
+        // );
       }
       return attrs.hidden || attrs.system; // return true if hidden or system attribute is set
     } catch {
-      logDebug(`Failed to read attributes for ${fullPath}: ${err}`);
+      //logDebug(`Failed to read attributes for ${fullPath}: ${err}`);
       return false; // if we can't read attributes, assume not hidden
     }
   }
