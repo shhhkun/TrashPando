@@ -15,10 +15,37 @@ function shouldSkipFolder(folderName, fullPath) {
     "Intermediate",
     "Saved",
     ".nyc_output",
+    ".git", // skip entire .git folders
+    ".svn", // SVN users
+    ".hg", // for Mercurial users
   ];
 
-  // skip by folder name
-  if (skipPatterns.some((p) => folderName.includes(p))) return true;
+  return skipPatterns.some((p) =>
+    folderName.toLowerCase().includes(p.toLowerCase())
+  );
+}
+
+function shouldSkipFile(fileName, fullPath) {
+  const skipExtensions = [".tmp", ".log", ".bak", ".swp"];
+
+  const skipNames = [
+    ".DS_Store",
+    "Thumbs.db",
+    ".babelrc",
+    "package-lock.json",
+    "yarn.lock",
+    "PROFSAVE", // game saves
+    "kvstore", // game cache/state
+  ];
+
+  if (skipExtensions.some((ext) => fileName.toLowerCase().endsWith(ext)))
+    return true;
+  if (
+    skipNames.some((name) =>
+      fileName.toLowerCase().includes(name.toLowerCase())
+    )
+  )
+    return true;
 
   return false;
 }
@@ -41,10 +68,13 @@ export async function findDuplicates(
       if (item.isDirectory()) {
         // skip unwanted directories
         const dirName = path.basename(fullPath);
-        if (shouldSkipFolder(dirName, fullPath)) return;
+        if (shouldSkipFolder(dirName, fullPath)) continue;
 
         await traverse(fullPath); // recurse into folder and wait till cleared
       } else if (item.isFile()) {
+        // skip unwanted files
+        if (shouldSkipFile(item.name, fullPath)) continue;
+
         console.log("Traversing:", currentPath);
         const stats = await fs.promises.stat(fullPath); // get file stats/metadata
 

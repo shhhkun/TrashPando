@@ -3,9 +3,13 @@ const path = require("path");
 const fs = require("fs");
 const isDev = !app.isPackaged;
 const mime = require("mime-types");
-require("electron-reload")(__dirname, {
+// require("electron-reload")(__dirname, {
+//   electron: path.join(__dirname, "node_modules", ".bin", "electron"),
+// });
+require("electron-reload")(path.join(__dirname, "renderer", "src"), {
   electron: path.join(__dirname, "node_modules", ".bin", "electron"),
 });
+
 const { Worker } = require("worker_threads");
 const { findDuplicates } = require("./duplicateManager.js");
 
