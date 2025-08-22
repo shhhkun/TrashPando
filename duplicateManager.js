@@ -2,6 +2,27 @@ import fs from "fs";
 import path from "path";
 import { hashFile } from "./renderer/src/utils/hash.js";
 
+function shouldSkipFolder(folderName, fullPath) {
+  const skipPatterns = [
+    "node_modules",
+    "temp",
+    "tmp",
+    "cache",
+    "logs",
+    "bak",
+    "backup",
+    "Autogen",
+    "Intermediate",
+    "Saved",
+    ".nyc_output",
+  ];
+
+  // skip by folder name
+  if (skipPatterns.some((p) => folderName.includes(p))) return true;
+
+  return false;
+}
+
 export async function findDuplicates(
   folderPath,
   options = { matchExtension: true }
@@ -20,9 +41,7 @@ export async function findDuplicates(
       if (item.isDirectory()) {
         // skip unwanted directories
         const dirName = path.basename(fullPath);
-        if (dirName === "node_modules" || dirName === ".git") {
-          return; // skip this directory
-        }
+        if (shouldSkipFolder(dirName, fullPath)) return;
 
         await traverse(fullPath); // recurse into folder and wait till cleared
       } else if (item.isFile()) {
