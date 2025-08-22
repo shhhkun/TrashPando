@@ -130,6 +130,13 @@ ipcMain.handle("find-duplicates", async (event, folderPath) => {
   return await findDuplicates(folderPath);
 });
 
+// for debugging
+ipcMain.handle("write-file", async (event, fileName, data) => {
+  const filePath = path.join(__dirname, fileName);
+  await fs.promises.writeFile(filePath, data, "utf-8");
+  return filePath;
+});
+
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {

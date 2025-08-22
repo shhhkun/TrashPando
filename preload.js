@@ -6,10 +6,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
   deleteFiles: (filePaths) => ipcRenderer.invoke("delete-files", filePaths),
   getPathSeparator: () => ipcRenderer.invoke("get-path-sep"),
   getCommonFolders: () => ipcRenderer.invoke("get-common-folders"),
-  scanRecursive: (folderPath) => ipcRenderer.invoke("scan-recursive", folderPath),
+  scanRecursive: (folderPath) =>
+    ipcRenderer.invoke("scan-recursive", folderPath),
 
   watchFolder: (folderPath) => ipcRenderer.invoke("watch-folder", folderPath),
-  unwatchFolder: (folderPath) => ipcRenderer.invoke("unwatch-folder", folderPath),
+  unwatchFolder: (folderPath) =>
+    ipcRenderer.invoke("unwatch-folder", folderPath),
   onFolderChanged: (callback) => {
     const wrapped = (_event, data) => callback(data);
     ipcRenderer.on("folder-changed", wrapped);
@@ -19,5 +21,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.removeListener("folder-changed", listener);
   },
 
-  findDuplicates: (folderPath) => ipcRenderer.invoke("find-duplicates", folderPath)
+  findDuplicates: (folderPath) =>
+    ipcRenderer.invoke("find-duplicates", folderPath),
+
+  writeFile: (fileName, data) =>
+    ipcRenderer.invoke("write-file", fileName, data),
 });
