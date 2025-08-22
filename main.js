@@ -7,18 +7,7 @@ require("electron-reload")(__dirname, {
   electron: path.join(__dirname, "node_modules", ".bin", "electron"),
 });
 const { Worker } = require("worker_threads");
-// const chokidar = require("chokidar");
-// const watchers = new Map(); // to track folder watchers
-
-// const ignoredFolders = [
-//   "Music",
-//   "Pictures",
-//   "Videos",
-//   "My Music",
-//   "My Pictures",
-//   "My Videos",
-// ];
-// const ignoredRegex = new RegExp(ignoredFolders.join("|"));
+const { findDuplicates } = require("./duplicateManager.js");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -131,12 +120,14 @@ ipcMain.handle("scan-recursive", async (event, folderPath) => {
 
 ipcMain.handle("watch-folder", (event, folderPath) => {
   runWatcherWorker("watch", folderPath, event.sender);
-  //   worker.eventSender = event.sender; // attach renderer sender so worker thread can communicate
-  // });
 });
 
 ipcMain.handle("unwatch-folder", (event, folderPath) => {
   runWatcherWorker("unwatch", folderPath);
+});
+
+ipcMain.handle("find-duplicates", async (event, folderPath) => {
+  return await findDuplicates(folderPath);
 });
 
 app.whenReady().then(createWindow);

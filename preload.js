@@ -18,4 +18,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   offFolderChanged: (listener) => {
     ipcRenderer.removeListener("folder-changed", listener);
   },
+
+  findDuplicates: (folderPath) => ipcRenderer.invoke("find-duplicates", folderPath)
 });
