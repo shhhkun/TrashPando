@@ -81,6 +81,44 @@ export default function FileExplorer({
         >
           {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
         </button>
+
+        {/* Duplicate Scanner Test */}
+        <button
+          className="no-drag"
+          onClick={async () => {
+            if (!folderPath) return;
+
+            try {
+              console.log("Scanning for duplicates in: ", folderPath);
+              const duplicates = await window.electronAPI.findDuplicates(
+                folderPath,
+                {
+                  matchExtension: true,
+                }
+              );
+
+              // format output
+              let output = "";
+              duplicates.forEach((group, index) => {
+                output += `Group ${index + 1}:\n`;
+                group.forEach((file) => {
+                  output += `  ${file.path}\n`;
+                });
+                output += "\n";
+              });
+
+              const outputFilePath = await window.electronAPI.writeFile(
+                "output.txt",
+                output
+              );
+              console.log("Duplicate scan results written to:", outputFilePath);
+            } catch (err) {
+              console.error("Duplicate scan error:", err);
+            }
+          }}
+        >
+          Test Duplicate Scan
+        </button>
       </div>
 
       {/* Folder Path Display */}
