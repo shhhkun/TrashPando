@@ -134,6 +134,11 @@ ipcMain.handle("find-duplicates", async (event, folderPath) => {
   return await findDuplicates(folderPath);
 });
 
+ipcMain.handle("scan-installed-apps", async () => {
+  const result = await runWorker("scan-installed-apps", {});
+  return result.items;
+});
+
 // for debugging
 ipcMain.handle("write-file", async (event, fileName, data) => {
   const filePath = path.join(__dirname, fileName);

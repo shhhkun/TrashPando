@@ -4,6 +4,7 @@ const path = require("path");
 const mime = require("mime-types");
 const winattr = require("winattr");
 const isWindows = process.platform === "win32";
+const { scanInstalledApps } = require("./installedAppsScanner.js");
 
 function logDebug(message) {
   parentPort.postMessage({ type: "log", message });
@@ -123,5 +124,10 @@ parentPort.on("message", (payload) => {
     const { dir, recursive = true } = payload;
     const result = scanFolderRecursive(dir, recursive);
     parentPort.postMessage(result);
+  }
+
+  if (payload.task === "scan-installed-apps") {
+    const apps = scanInstalledApps();
+    parentPort.postMessage({ items: apps });
   }
 });
