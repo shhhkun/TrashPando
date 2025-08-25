@@ -87,10 +87,10 @@ _Detailed instructions coming as features are implemented_
   - Central area for storage management
 - File Explorer:
   - More free-use file/folder navigator for precise deletion
-- Basic smart metrics (suggestion based file cleanup) based on:
+- Basic metrics (suggestion/sort by) based on:
   - Folder contents (empty/non-empty)
   - File size
-  - Recently used/modified dates
+  - Modified/created dates
   - Duplicate files
 - Moved recursive folder scanning on workers threads
 - Adjusted file scanning to avoid sensitive system files (winattr for Windows, "." prefix for UNIX/Linux/macOS)
@@ -123,16 +123,31 @@ _Detailed instructions coming as features are implemented_
     - Recursive scan of user directories (on worker threads)
     - Sum total size (GB) of each category
     - Display sum, and have option to view FileList
+
   - Other
     - Separate category from apps, docs, music, temp, etc.
     - Perform recursive scan at C:\Users\User (or different based on OS)
     - Display sum, and option to view FileList
+
   - Installed Apps (Windows First)
-    - Get registry keys
-    - Pull app name, install date, publisher, estimated date
-    - May need elevated permissions to call app uninstall string
-    - First, simply read installed apps & sizes, and display in dashbaord (with their respective icons)
+    - First detect and find desired apps with their sizes, and display in dashboard (with their respective icons)
     - Later/After, add uninstall feature thats gated behind admin prompts
+    - Check common folders:
+      - Program Files
+      - Program Files (x86)
+      - Local Disk (C:)
+    - Recursively scan folders for actual app/game .exe which often contains:
+      - Proper name
+      - Version info
+      - Game icon
+      - Date modified/other
+    - Heuristically Filter while recursing folders
+      - Watch out for basenames, folder names, small folder sizes
+    - Search containing folder (or broader install root)
+      - Leads to finding total/containg folder (app size)
+      - Leads to finding for nearby uninstallers (.exe)
+    - Obtaining registry keys
+      - Optional, but would still require heuristic filtering to avoid getting unwanted .exe's
 
 - [ ] Caching:
 
