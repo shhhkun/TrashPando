@@ -121,6 +121,41 @@ export default function FileExplorer({
         </button>
       </div>
 
+      {/* Apps Installed Scanner Test */}
+      <button
+        className="no-drag"
+        onClick={async () => {
+          try {
+            console.log("Scanning installed apps...");
+            const apps = await window.electronAPI.scanInstalledApps();
+
+            console.log(apps);
+
+            // format output
+            let output = "Installed Apps:\n\n";
+            apps.forEach((app, index) => {
+              output += `${index + 1}. ${app.name || "Unknown"}\n`;
+              if (app.version) output += `   Version: ${app.version}\n`;
+              if (app.location) output += `   Path: ${app.location}\n`;
+              output += "\n";
+            });
+
+            const outputFilePath = await window.electronAPI.writeFile(
+              "output.txt",
+              output
+            );
+            console.log(
+              "Installed apps scan results written to:",
+              outputFilePath
+            );
+          } catch (err) {
+            console.error("Installed apps scan error:", err);
+          }
+        }}
+      >
+        Test Apps Installed Scan
+      </button>
+
       {/* Folder Path Display */}
       <div className="italic">{folderPath || "No folder selected"}</div>
 
