@@ -133,11 +133,24 @@ export default function FileExplorer({
 
             // format output
             let output = "Installed Apps:\n\n";
-            apps.forEach((app, index) => {
-              output += `${index + 1}. ${app.name || "Unknown"}\n`;
-              if (app.version) output += `   Version: ${app.version}\n`;
-              if (app.location) output += `   Path: ${app.location}\n`;
-              output += "\n";
+
+            apps.forEach((folderItem, index) => {
+              // folderItem can have multiple executables
+              if (Array.isArray(folderItem)) {
+                output += `Folder ${index + 1}:\n`;
+                folderItem.forEach((app, i) => {
+                  output += `  ${i + 1}. ${app.name || "Unknown"}\n`;
+                  if (app.version) output += `     Version: ${app.version}\n`;
+                  if (app.path) output += `     Path: ${app.path}\n`;
+                });
+                output += "\n";
+              } else {
+                output += `${index + 1}. ${folderItem.name || "Unknown"}\n`;
+                if (folderItem.version)
+                  output += `   Version: ${folderItem.version}\n`;
+                if (folderItem.path) output += `   Path: ${folderItem.path}\n`;
+                output += "\n";
+              }
             });
 
             const outputFilePath = await window.electronAPI.writeFile(

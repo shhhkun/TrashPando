@@ -1,88 +1,103 @@
 const fs = require("fs");
 const path = require("path");
 const isWindows = process.platform === "win32";
+const extractIcon = require("icon-extractor");
 
-// target folders (Windows-only for now)
-const programFiles = [
-  process.env["ProgramFiles"] || "C:\\Program Files",
-  process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)",
+const MAX_DEPTH = 3; // recursive search depth
+
+// extensions we consider as executables
+const EXECUTABLE_EXTENSIONS = [".exe", ".msi", ".bat", ".cmd", ".lnk"];
+
+// keywords to skip (system runtimes, repair tools, installers, etc.)
+const SKIP_KEYWORDS = [
+  "uninstall",
+  "setup",
+  "update",
+  "updater",
+  "crash",
+  "helper",
+  "installer",
+  "repair",
+  "service",
+  "agent",
 ];
-const userLocalPrograms = path.join(
-  process.env.USERPROFILE || "C:\\Users\\Public",
-  "AppData\\Local\\Programs"
-);
 
-function getFolderSize(folderPath) {
-  let totalSize = 0;
-  try {
-    const files = fs.readdirSync(folderPath);
-    for (const file of files) {
-      const fullPath = path.join(folderPath, file);
-      const stats = fs.statSync(fullPath);
-      if (stats.isFile()) totalSize += stats.size;
-      else if (stats.isDirectory()) totalSize += getFolderSize(fullPath);
-    }
-  } catch {
-    // ignore errors
-  }
-  return totalSize;
+function shouldSkip(filePath) {
+  const name = path.basename(filePath).toLowerCase();
+  return SKIP_KEYWORDS.some((kw) => name.includes(kw));
 }
 
-function extractAppIcon(exePath, fallbackIcon = null) {
-  try {
-    const icon = nativeImage.createFromPath(exePath);
-    if (icon.isEmpty() && fallbackIcon) return fallbackIcon;
+// recursively scan directories and collect all executables
+function scanDirectoryRecursive(dir, depth = 0, results = [], maxDepth = MAX_DEPTH) {
+  if (depth > maxDepth) return results;
 
-    const tempDir = path.join(__dirname, "temp-icons");
-    fs.mkdirSync(tempDir, { recursive: true });
-    const iconPath = path.join(
-      tempDir,
-      path.basename(exePath, ".exe") + ".png"
-    );
-    fs.writeFileSync(iconPath, icon.toPNG());
-    return iconPath;
-  } catch {
-    return fallbackIcon;
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch (_) {
+    return results; // permission denied or inaccessible
   }
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      scanDirectoryRecursive(fullPath, depth + 1, results);
+    } else {
+      const ext = path.extname(entry.name).toLowerCase();
+      if (EXECUTABLE_EXTENSIONS.includes(ext) && !shouldSkip(fullPath)) {
+        results.push(fullPath);
+      }
+    }
+  }
+  return results;
+}
+
+function extractAppMetadata(filePath) {
+  let stats;
+  try {
+    stats = fs.statSync(filePath);
+  } catch (_) {
+    return null;
+  }
+
+  let iconPath = null;
+  try {
+    iconPath = extractIcon.getIcon(filePath, "large");
+  } catch (_) {}
+
+  return {
+    name: path.parse(filePath).name,
+    path: filePath,
+    size: stats.size,
+    modified: stats.mtime,
+    iconPath,
+  };
 }
 
 function scanInstalledApps() {
   if (!isWindows) return [];
 
-  const targetFolders = [...programFiles, userLocalPrograms];
+  // include Program Files folders + full C:\ drive
+  const targetDirs = [
+    process.env["ProgramFiles"],
+    process.env["ProgramFiles(x86)"],
+    process.env["ProgramW6432"],
+    "C:\\",
+  ].filter(Boolean);
+
+  const allExecutables = [];
+
+  for (const dir of targetDirs) {
+    const depth = dir === "C:\\" ? 1 : MAX_DEPTH; // shallow scan for C:\
+    scanDirectoryRecursive(dir, 0, allExecutables, depth);
+  }
+
+  // extract metadata for every executable
   const apps = [];
-
-  for (const folder of targetFolders) {
-    try {
-      const entries = fs.readdirSync(folder);
-      for (const entry of entries) {
-        const fullPath = path.join(folder, entry);
-        const stats = fs.statSync(fullPath);
-        if (stats.isDirectory()) {
-          const exeFiles = fs
-            .readdirSync(fullPath)
-            .filter((f) => f.toLowerCase().endsWith(".exe"));
-          if (exeFiles.length === 0) continue;
-
-          const exePath = path.join(fullPath, exeFiles[0]); // take first exe
-          const size = getFolderSize(fullPath);
-          const iconPath = extractAppIcon(exePath);
-
-          apps.push({
-            name: entry,
-            exePath,
-            folderPath: fullPath,
-            size,
-            created: stats.birthtime,
-            modified: stats.mtime,
-            iconPath,
-            type: "app",
-          });
-        }
-      }
-    } catch {
-      // skip folder
-    }
+  for (const exePath of allExecutables) {
+    const meta = extractAppMetadata(exePath);
+    if (meta) apps.push(meta);
   }
 
   return apps;
