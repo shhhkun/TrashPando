@@ -22,9 +22,29 @@ const SKIP_KEYWORDS = [
   "agent",
 ];
 
+// function shouldSkip(filePath) {
+//   const name = path.basename(filePath).toLowerCase();
+//   return SKIP_KEYWORDS.some((kw) => name.includes(kw));
+// }
+
 function shouldSkip(filePath) {
   const name = path.basename(filePath).toLowerCase();
-  return SKIP_KEYWORDS.some((kw) => name.includes(kw));
+
+  // skip based on filename
+  if (SKIP_KEYWORDS.some((kw) => name.includes(kw))) return true;
+
+  // skip based on parent folder names
+  const skipFolders = [
+    "windows",
+    "programdata",
+    "$recycle.bin",
+    "system volume information",
+  ];
+
+  const folders = filePath.split(path.sep).map((f) => f.toLowerCase());
+  if (folders.some((f) => skipFolders.includes(f))) return true;
+
+  return false;
 }
 
 // recursively scan directories and collect all executables

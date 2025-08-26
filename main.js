@@ -136,7 +136,8 @@ ipcMain.handle("find-duplicates", async (event, folderPath) => {
 
 ipcMain.handle("scan-installed-apps", async () => {
   const result = await runWorker("scan-installed-apps", {});
-  return result.items;
+  //return result.items;
+  return Array.isArray(result?.items) ? result.items : [];
 });
 
 // for debugging

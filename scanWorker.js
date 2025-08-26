@@ -119,7 +119,7 @@ function scanFolderRecursive(dirPath, recursive = true) {
   return { visibleSize, hiddenSize, items };
 }
 
-parentPort.on("message", (payload) => {
+parentPort.on("message", async (payload) => {
   if (payload.task === "scan") {
     const { dir, recursive = true } = payload;
     const result = scanFolderRecursive(dir, recursive);
@@ -127,7 +127,11 @@ parentPort.on("message", (payload) => {
   }
 
   if (payload.task === "scan-installed-apps") {
-    const apps = scanInstalledApps();
-    parentPort.postMessage({ items: apps });
+    try {
+      const apps = await scanInstalledApps(); // now valid
+      parentPort.postMessage({ items: apps });
+    } catch (err) {
+      parentPort.postMessage({ error: err.message });
+    }
   }
 });
