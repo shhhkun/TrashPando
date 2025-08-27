@@ -8,47 +8,41 @@ const MAX_DEPTH = 3; // recursive search depth
 // extensions we consider as executables
 const EXECUTABLE_EXTENSIONS = [".exe", ".msi", ".bat", ".cmd", ".lnk"];
 
-// keywords to skip (system runtimes, repair tools, installers, etc.)
-const SKIP_KEYWORDS = [
-  "uninstall",
-  "setup",
-  "update",
-  "updater",
-  "crash",
-  "helper",
-  "installer",
-  "repair",
-  "service",
-  "agent",
+// regex keywords pattern (case-insensitive) to skip (system runtimes, repair tools, installers, etc.)
+const SKIP_PATTERNS = [
+  /\b(uninstall|setup|update|updater|crash|helper|installer|repair|service|agent)\b/i,
+  /\.(tmp|bak|msi|dmp)$/i, // skip temporary/install dump files
+];  
+
+// key folders to skip (main OS folder, program data, recycle bin, etc.)
+const SKIP_FOLDERS = [
+  "windows",
+  "programdata",
+  "$recycle.bin",
+  "system volume information",
 ];
 
-// function shouldSkip(filePath) {
-//   const name = path.basename(filePath).toLowerCase();
-//   return SKIP_KEYWORDS.some((kw) => name.includes(kw));
-// }
-
 function shouldSkip(filePath) {
-  const name = path.basename(filePath).toLowerCase();
+  const name = path.basename(filePath);
 
-  // skip based on filename
-  if (SKIP_KEYWORDS.some((kw) => name.includes(kw))) return true;
+  // regex-based filename skip
+  if (SKIP_PATTERNS.some((re) => re.test(name))) return true;
 
   // skip based on parent folder names
-  const skipFolders = [
-    "windows",
-    "programdata",
-    "$recycle.bin",
-    "system volume information",
-  ];
-
   const folders = filePath.split(path.sep).map((f) => f.toLowerCase());
-  if (folders.some((f) => skipFolders.includes(f))) return true;
+  if (folders.some((f) => SKIP_FOLDERS.includes(f))) return true;
 
   return false;
 }
 
+
 // recursively scan directories and collect all executables
-function scanDirectoryRecursive(dir, depth = 0, results = [], maxDepth = MAX_DEPTH) {
+function scanDirectoryRecursive(
+  dir,
+  depth = 0,
+  results = [],
+  maxDepth = MAX_DEPTH
+) {
   if (depth > maxDepth) return results;
 
   let entries;
