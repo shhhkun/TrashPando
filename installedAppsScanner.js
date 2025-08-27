@@ -4,6 +4,7 @@ const isWindows = process.platform === "win32";
 const extractIcon = require("icon-extractor");
 
 const MAX_DEPTH = 3; // recursive search depth
+const MIN_APP_SIZE = 10 * 1024 * 1024; // 10 MB
 
 // extensions we consider as executables
 const EXECUTABLE_EXTENSIONS = [".exe", ".msi", ".bat", ".cmd", ".lnk"];
@@ -12,7 +13,7 @@ const EXECUTABLE_EXTENSIONS = [".exe", ".msi", ".bat", ".cmd", ".lnk"];
 const SKIP_PATTERNS = [
   /\b(uninstall|setup|update|updater|crash|helper|installer|repair|service|agent)\b/i,
   /\.(tmp|bak|msi|dmp)$/i, // skip temporary/install dump files
-];  
+];
 
 // key folders to skip (main OS folder, program data, recycle bin, etc.)
 const SKIP_FOLDERS = [
@@ -34,7 +35,6 @@ function shouldSkip(filePath) {
 
   return false;
 }
-
 
 // recursively scan directories and collect all executables
 function scanDirectoryRecursive(
@@ -111,7 +111,12 @@ function scanInstalledApps() {
   const apps = [];
   for (const exePath of allExecutables) {
     const meta = extractAppMetadata(exePath);
-    if (meta) apps.push(meta);
+    //if (meta) apps.push(meta);
+
+    // // apply size filter
+    // if (meta && meta.size >= MIN_APP_SIZE) {
+    //   apps.push(meta);
+    // }
   }
 
   return apps;

@@ -12,6 +12,7 @@ require("electron-reload")(path.join(__dirname, "renderer", "src"), {
 
 const { Worker } = require("worker_threads");
 const { findDuplicates } = require("./duplicateManager.js");
+const { scanInstalledAppsRegistry } = require("./registryScanner.js");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -141,8 +142,13 @@ ipcMain.handle("scan-installed-apps", async () => {
 });
 
 ipcMain.handle("scan-installed-apps-registry", async () => {
-  const result = await runWorker("scan-installed-apps-registry", {});
-  return Array.isArray(result?.items) ? result.items : [];
+  try {
+    const apps = await scanInstalledAppsRegistry(); // call on main thread
+    return apps;
+  } catch (err) {
+    console.error("Failed to scan installed apps:", err);
+    return [];
+  }
 });
 
 // for debugging
