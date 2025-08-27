@@ -5,6 +5,7 @@ const mime = require("mime-types");
 const winattr = require("winattr");
 const isWindows = process.platform === "win32";
 const { scanInstalledApps } = require("./installedAppsScanner.js");
+const { scanInstalledAppsRegistry } = require("./registryScanner.js");
 
 function logDebug(message) {
   parentPort.postMessage({ type: "log", message });
@@ -131,6 +132,16 @@ parentPort.on("message", async (payload) => {
       const apps = await scanInstalledApps(); // now valid
       parentPort.postMessage({ items: apps });
     } catch (err) {
+      parentPort.postMessage({ error: err.message });
+    }
+  }
+
+  if (payload.task === "scan-installed-apps-registry") {
+    try {
+      const apps = await scanInstalledAppsRegistry();
+      parentPort.postMessage({ items: apps });
+    } catch (err) {
+      console.error("Registry scan error:", err);
       parentPort.postMessage({ error: err.message });
     }
   }

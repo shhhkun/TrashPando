@@ -28,4 +28,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("write-file", fileName, data),
 
   scanInstalledApps: () => ipcRenderer.invoke("scan-installed-apps"),
+
+  scanInstalledAppsRegistry: () =>
+    ipcRenderer.invoke("scan-installed-apps-registry"),
 });

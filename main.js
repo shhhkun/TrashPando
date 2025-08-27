@@ -140,6 +140,11 @@ ipcMain.handle("scan-installed-apps", async () => {
   return Array.isArray(result?.items) ? result.items : [];
 });
 
+ipcMain.handle("scan-installed-apps-registry", async () => {
+  const result = await runWorker("scan-installed-apps-registry", {});
+  return Array.isArray(result?.items) ? result.items : [];
+});
+
 // for debugging
 ipcMain.handle("write-file", async (event, fileName, data) => {
   const filePath = path.join(__dirname, fileName);
