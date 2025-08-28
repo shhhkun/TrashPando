@@ -13,16 +13,24 @@ function mapAppObject(app) {
 }
 
 // scan installed apps and return cleaned objects
-async function scanInstalledAppsRegistry() {
-  let apps = [];
+async function* scanInstalledAppsRegistry(batchSize = 5) {
+  let rawApps = [];
   try {
-    const rawApps = await getWinInstalledApps();
-    apps = rawApps.map(mapAppObject);
+    rawApps = await getWinInstalledApps();
   } catch (err) {
     console.error("Failed to scan installed apps:", err);
+    return;
   }
 
-  return apps;
+  for (let i = 0; i < rawApps.length; i += batchSize) {
+    const batch = rawApps.slice(i, i + batchSize);
+    const mappedBatch = batch.map(mapAppObject);
+
+    yield mappedBatch; // yield each batch to the caller
+
+    // yield to the event loop
+    await new Promise((resolve) => setImmediate(resolve));
+  }
 }
 
 module.exports = { scanInstalledAppsRegistry };
@@ -30,7 +38,7 @@ module.exports = { scanInstalledAppsRegistry };
 if (require.main === module) {
   (async () => {
     console.log("Running installed apps registry scan...\n");
-    const { scanInstalledAppsRegistry } = require("./registryScanner");
+    const { scanInstalledAppsRegistry } = require("./registryScanner");z
 
     const apps = await scanInstalledAppsRegistry();
 

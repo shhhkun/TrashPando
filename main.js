@@ -2,10 +2,6 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const isDev = !app.isPackaged;
-const mime = require("mime-types");
-// require("electron-reload")(__dirname, {
-//   electron: path.join(__dirname, "node_modules", ".bin", "electron"),
-// });
 require("electron-reload")(path.join(__dirname, "renderer", "src"), {
   electron: path.join(__dirname, "node_modules", ".bin", "electron"),
 });
@@ -143,7 +139,10 @@ ipcMain.handle("scan-installed-apps", async () => {
 
 ipcMain.handle("scan-installed-apps-registry", async () => {
   try {
-    const apps = await scanInstalledAppsRegistry(); // call on main thread
+    const apps = [];
+    for await (const batch of scanInstalledAppsRegistry()) {
+      apps.push(...batch);
+    }
     return apps;
   } catch (err) {
     console.error("Failed to scan installed apps:", err);
