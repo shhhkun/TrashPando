@@ -138,12 +138,6 @@ ipcMain.handle("find-duplicates", async (event, folderPath) => {
   return await findDuplicates(folderPath);
 });
 
-ipcMain.handle("scan-installed-apps", async () => {
-  const result = await runWorker("scan-installed-apps", {});
-  //return result.items;
-  return Array.isArray(result?.items) ? result.items : [];
-});
-
 ipcMain.handle("scan-installed-apps-registry", async () => {
   try {
     const apps = [];
