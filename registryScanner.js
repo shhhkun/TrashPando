@@ -24,7 +24,14 @@ async function* scanInstalledAppsRegistry(batchSize = 5) {
 
   for (let i = 0; i < rawApps.length; i += batchSize) {
     const batch = rawApps.slice(i, i + batchSize);
-    const mappedBatch = batch.map(mapAppObject);
+    const mappedBatch = batch
+      .filter((app) => {
+        const sysComp = app.SystemComponent
+          ? parseInt(app.SystemComponent, 16) // handles hex or decimal strings
+          : 0; // default to 0 if missing
+        return app.DisplayName && sysComp !== 1;
+      })
+      .map(mapAppObject);
 
     yield mappedBatch; // yield each batch to the caller
 
@@ -38,7 +45,8 @@ module.exports = { scanInstalledAppsRegistry };
 if (require.main === module) {
   (async () => {
     console.log("Running installed apps registry scan...\n");
-    const { scanInstalledAppsRegistry } = require("./registryScanner");z
+    const { scanInstalledAppsRegistry } = require("./registryScanner");
+    z;
 
     const apps = await scanInstalledAppsRegistry();
 
