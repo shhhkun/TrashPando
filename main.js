@@ -1,4 +1,11 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  shell,
+  nativeImage,
+} = require("electron");
 const path = require("path");
 const fs = require("fs");
 const isDev = !app.isPackaged;
@@ -155,6 +162,24 @@ ipcMain.handle("write-file", async (event, fileName, data) => {
   const filePath = path.join(__dirname, fileName);
   await fs.promises.writeFile(filePath, data, "utf-8");
   return filePath;
+});
+
+ipcMain.handle("get-app-icon", async (event, iconPath) => {
+  try {
+    if (!iconPath || !fs.existsSync(iconPath)) return null;
+
+    // create nativeImage from path
+    const image = nativeImage.createFromPath(iconPath);
+
+    // resize to 48x48
+    const resized = image.resize({ width: 48, height: 48 });
+
+    // return as base64 data URL
+    return resized.toDataURL();
+  } catch (err) {
+    console.error("Failed to get icon:", err);
+    return null;
+  }
 });
 
 app.whenReady().then(createWindow);
