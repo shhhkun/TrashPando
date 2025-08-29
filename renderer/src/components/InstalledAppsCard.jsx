@@ -1,21 +1,28 @@
 import { useState, useEffect } from "react";
+import { getAppIconFromCache, setAppIconInCache, invalidateAppIconCache } from "../cache";
 
 const darkGrey = "rgb(34, 34, 34)";
 const lightText = "rgba(230, 230, 230, 1)";
 
 // app icon extractor (takes .exe, .ico)
 function AppIcon({ exePath }) {
-  const [icon, setIcon] = useState(null);
+  const [icon, setIcon] = useState(() => getAppIconFromCache(exePath));
 
   useEffect(() => {
+    if (!exePath || icon) return;
+
     let mounted = true;
     window.electronAPI.getAppIcon(exePath).then((dataUrl) => {
-      if (mounted && dataUrl) setIcon(dataUrl);
+      if (mounted && dataUrl) {
+        setAppIconInCache(exePath, dataUrl); // store in cache
+        setIcon(dataUrl);
+      }
     });
+
     return () => {
       mounted = false;
     };
-  }, [exePath]);
+  }, [exePath, icon]);
 
   return icon ? (
     <img src={icon} alt="icon" style={{ width: 48, height: 48 }} />
@@ -26,6 +33,16 @@ function AppIcon({ exePath }) {
       🗂️
     </div>
   );
+}
+
+function formatFromKB(kb) {
+  if (kb == null) return "";
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb.toFixed(2)} MB`;
+  const gb = mb / 1024;
+  if (gb < 1024) return `${gb.toFixed(2)} GB`;
+  const tb = gb / 1024;
+  return `${tb.toFixed(2)} TB`;
 }
 
 export default function InstalledAppsCard() {
@@ -136,9 +153,7 @@ export default function InstalledAppsCard() {
             </div>
             <span style={{ fontWeight: "bold" }}>{app.name}</span>
             {app.size && (
-              <span style={{ fontSize: "12px" }}>
-                {(app.size / 1024 / 1024).toFixed(2)} MB
-              </span>
+              <span style={{ fontSize: "12px" }}>{formatFromKB(app.size)}</span>
             )}
             {app.installDate && (
               <span style={{ fontSize: "12px" }}>{app.installDate}</span>

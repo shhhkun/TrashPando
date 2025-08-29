@@ -16,3 +16,24 @@ export function invalidateCache(folderPath) {
 export function clearCache() {
   folderCache.clear();
 }
+
+// key = exePath, value = { dataUrl, timestamp }
+const appIconCache = new Map();
+
+export function getAppIconFromCache(exePath) {
+  const entry = appIconCache.get(exePath);
+  if (!entry) return null;
+  return entry.dataUrl;
+}
+
+export function setAppIconInCache(exePath, dataUrl) {
+  appIconCache.set(exePath, { dataUrl, timestamp: Date.now() });
+}
+
+export function invalidateAppIconCache(exePath) {
+  appIconCache.delete(exePath);
+}
+
+export function clearAppIconCache() {
+  appIconCache.clear();
+}
