@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { getAppIconFromCache, setAppIconInCache, invalidateAppIconCache } from "../cache";
+import {
+  getAppIconFromCache,
+  setAppIconInCache,
+  invalidateAppIconCache,
+} from "../cache";
 
 const darkGrey = "rgb(34, 34, 34)";
 const lightText = "rgba(230, 230, 230, 1)";
@@ -12,6 +16,15 @@ function AppIcon({ exePath }) {
     if (!exePath || icon) return;
 
     let mounted = true;
+
+    // check if already cached
+    const cachedIcon = getAppIconFromCache(exePath);
+    if (cachedIcon) {
+      setIcon(cachedIcon);
+      return; // no need to call main process
+    }
+
+    // otherwise, fetch from main
     window.electronAPI.getAppIcon(exePath).then((dataUrl) => {
       if (mounted && dataUrl) {
         setAppIconInCache(exePath, dataUrl); // store in cache
@@ -129,7 +142,7 @@ export default function InstalledAppsCard() {
       >
         {displayedApps.map((app, idx) => (
           <div
-            key={idx}
+            key={`${app.iconPath || app.name}-${idx}`}
             style={{
               background: darkGrey,
               padding: "10px",
