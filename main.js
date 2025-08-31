@@ -19,12 +19,61 @@ const { scanInstalledAppsRegistry } = require("./registryScanner.js");
 
 const { execFile } = require("child_process");
 
-function extractIconFromExe(filePath) {
+// function extractIconFromExe(filePath) {
+//   return new Promise((resolve, reject) => {
+//     const outPath = path.join(
+//       app.getPath("temp"),
+//       `${path.basename(filePath)}.png`
+//     );
+
+//     const psCommand = `
+//       Add-Type -AssemblyName System.Drawing;
+//       $icon = [System.Drawing.Icon]::ExtractAssociatedIcon('${filePath}');
+//       if ($icon -ne $null) {
+//         $bitmap = $icon.ToBitmap();
+//         $bitmap.Save('${outPath}', [System.Drawing.Imaging.ImageFormat]::Png);
+//         Write-Output '${outPath}';
+//       }
+//     `;
+
+//     execFile(
+//       "powershell.exe",
+//       ["-NoProfile", "-Command", psCommand],
+//       { windowsHide: true },
+//       (err, stdout, stderr) => {
+//         if (err) {
+//           console.error(
+//             "[extractIconFromExe] Failed for:",
+//             filePath,
+//             stderr || err
+//           );
+//           return reject(err);
+//         }
+
+//         const output = stdout.toString().trim();
+//         if (!fs.existsSync(outPath)) {
+//           return reject(new Error("Icon not created"));
+//         }
+
+//         console.log("[extractIconFromExe] Success, cached at:", outPath);
+//         resolve(outPath);
+//       }
+//     );
+//   });
+// }
+
+function extractIconFromExe(filePathWithIndex) {
   return new Promise((resolve, reject) => {
+    // split out index if present
+    let [filePath, index] = filePathWithIndex.split(",");
+    index = parseInt(index || "0", 10); // default to 0
+
     const outPath = path.join(
       app.getPath("temp"),
-      `${path.basename(filePath)}.png`
+      `${path.basename(filePath)}_${index}.png`
     );
+
+    console.log("[extractIconFromExe] Attempting extraction for:", filePath, "Index:", index);
 
     const psCommand = `
       Add-Type -AssemblyName System.Drawing;
@@ -42,15 +91,10 @@ function extractIconFromExe(filePath) {
       { windowsHide: true },
       (err, stdout, stderr) => {
         if (err) {
-          console.error(
-            "[extractIconFromExe] Failed for:",
-            filePath,
-            stderr || err
-          );
+          console.error("[extractIconFromExe] Failed for:", filePath, stderr || err);
           return reject(err);
         }
 
-        const output = stdout.toString().trim();
         if (!fs.existsSync(outPath)) {
           return reject(new Error("Icon not created"));
         }
@@ -203,25 +247,6 @@ ipcMain.handle("write-file", async (event, fileName, data) => {
   return filePath;
 });
 
-// ipcMain.handle("get-app-icon", async (event, iconPath) => {
-//   try {
-//     if (!iconPath || !fs.existsSync(iconPath)) return null;
-
-//     // create nativeImage from path
-//     const image = nativeImage.createFromPath(iconPath);
-//     //if (image.isEmpty()) return null;
-
-//     // resize to 48x48
-//     const resized = image.resize({ width: 48, height: 48 });
-
-//     // return as base64 data URL
-//     return resized.toDataURL();
-//   } catch (err) {
-//     console.error("Failed to get icon:", err);
-//     return null;
-//   }
-// });
-
 ipcMain.handle("get-app-icon", async (event, iconPath) => {
   try {
     if (!iconPath || !fs.existsSync(iconPath)) return null;
@@ -234,8 +259,8 @@ ipcMain.handle("get-app-icon", async (event, iconPath) => {
         : image.resize({ width: 48, height: 48 }).toDataURL();
     }
 
-    // otherwise extract from exe/dll
-    if (/\.(exe|dll)$/i.test(iconPath)) {
+    // otherwise extract from exe/dll (handles index now)
+    if (/\.(exe|dll)/i.test(iconPath)) {
       try {
         const extractedPath = await extractIconFromExe(iconPath);
         const image = nativeImage.createFromPath(extractedPath);
