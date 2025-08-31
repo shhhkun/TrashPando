@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import FileExplorer from "./components/FileExplorer";
 import DashboardCard from "./components/DashboardCard";
+import InstalledAppsCard from "./components/InstalledAppsCard";
+import TrashySidebar from "./components/TrashySidebar"; // tsx
 
 const darkGrey = "rgb(34, 34, 34)";
 const lightText = "rgba(230, 230, 230, 1)";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("apps");
+
   const [expandedGroups, setExpandedGroups] = useState({
     dashboard: true,
     fileExplorer: false,
@@ -145,7 +148,15 @@ function App() {
       }}
     >
       {/* Sidebar */}
-      <div
+      <TrashySidebar
+        activeSection={activeTab}
+        setActiveSection={setActiveTab}
+        folderPath={folderPath}
+        setFolderPath={setFolderPath}
+        commonFolders={commonFolders}
+      />
+
+      {/* <div
         style={{
           width: "250px",
           backgroundColor: "#222",
@@ -154,7 +165,6 @@ function App() {
           flexDirection: "column",
         }}
       >
-        {/* Dashboard Group */}
         <div>
           <button
             style={{
@@ -183,16 +193,16 @@ function App() {
             >
               {dashboardItems.map((item) => (
                 <button
-                  // key={item}
-                  // onClick={() =>
-                  //   setActiveTab(item.toLowerCase().replace(/ /g, ""))
-                  // }
                   key={item}
                   onClick={() => {
-                    const folderKey = item.toLowerCase();
-                    const folder = commonFolders[folderKey];
-                    setActiveTab(folderKey);
-                    if (folder) setFolderPath(folder); // force folderPath to update
+                    if (item === "Installed Apps") {
+                      setActiveTab("apps");
+                    } else {
+                      const folderKey = item.toLowerCase();
+                      const folder = commonFolders[folderKey];
+                      setActiveTab(folderKey);
+                      if (folder) setFolderPath(folder); // force folderPath to update
+                    }
                   }}
                 >
                   {item}
@@ -202,7 +212,6 @@ function App() {
           )}
         </div>
 
-        {/* File Explorer */}
         <div style={{ marginTop: "20px" }}>
           <button
             style={{
@@ -240,29 +249,21 @@ function App() {
                   {name.charAt(0).toUpperCase() + name.slice(1)}
                 </button>
               ))}
-              {/* Optional: Custom Path button */}
               <button onClick={() => setActiveTab("files")}>
                 Custom Path…
               </button>
             </div>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Main Panel */}
       <div style={{ flex: 1, backgroundColor: "#333", padding: "20px" }}>
-        <div className="h-14 border-b border-gray-800 flex items-center px-4">
-          {/*<h1 className="text-xl font-semibold capitalize">{activeTab}</h1>*/}
-        </div>
-        <div className="flex-1 overflow-auto p-4">
-          {activeTab === "overview" && (
-            <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
-              <h2 className="font-semibold">Storage Overview</h2>
-              <p className="text-sm text-gray-400">
-                (placeholder for graphs + smart suggestions)
-              </p>
-            </div>
-          )}
+        <div className="h-14 border-b border-gray-800 flex items-center px-4"></div>
+        <div
+          className="flex-1 overflow-auto p-4"
+          style={{ background: "#333" }}
+        >
           {activeTab === "files" && (
             <FileExplorer
               // navigation props
@@ -286,7 +287,30 @@ function App() {
               confirmDelete={confirmDelete}
             />
           )}
-          {activeTab === "documents" && (
+
+          {activeTab === "apps" && <InstalledAppsCard />}
+
+          {["documents", "pictures", "videos", "music"].includes(activeTab) && (
+            <DashboardCard
+              title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+              folderPath={folderPath}
+              setFolderPath={setFolderPath}
+              files={files}
+              setFiles={setFiles}
+              selectedFiles={selectedFiles}
+              setSelectedFiles={setSelectedFiles}
+              showConfirm={showConfirm}
+              setShowConfirm={setShowConfirm}
+              toastMsg={toastMsg}
+              setToastMsg={setToastMsg}
+              toastType={toastType}
+              setFilesToDelete={setFilesToDelete}
+              pathSeparator={pathSeparator}
+              confirmDelete={confirmDelete}
+            />
+          )}
+
+          {/* {activeTab === "documents" && (
             <DashboardCard
               title="Documents"
               folderPath={folderPath}
@@ -361,21 +385,7 @@ function App() {
               pathSeparator={pathSeparator}
               confirmDelete={confirmDelete}
             />
-          )}
-          {activeTab === "apps" && (
-            <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
-              <h2 className="font-semibold">Installed Apps</h2>
-              <p className="text-sm text-gray-400">
-                (placeholder for app data)
-              </p>
-            </div>
-          )}
-          {activeTab === "settings" && (
-            <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
-              <h2 className="font-semibold">Settings</h2>
-              <p className="text-sm text-gray-400">(theme, preferences)</p>
-            </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>
