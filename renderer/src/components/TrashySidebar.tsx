@@ -12,7 +12,6 @@ import {
   Download,
   Monitor,
   Plus,
-  Home,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -22,13 +21,26 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
 
-const TrashySidebar = () => {
-  const [activeSection, setActiveSection] =
-    useState("dashboard");
+interface TrashySidebarProps {
+  activeItem: string | null;
+  setActiveItem: (item: string | null) => void;
+  folderPath: string;
+  setFolderPath: (path: string) => void;
+  commonFolders: Record<string, string>;
+}
+
+const TrashySidebar: React.FC<TrashySidebarProps> = ({
+  activeItem,
+  setActiveItem,
+  folderPath,
+  setFolderPath,
+  commonFolders,
+}) => {
   const [expandedSections, setExpandedSections] = useState({
     dashboard: true,
     explorer: true,
   });
+  const [activePanel, setActivePanel] = useState("dashboard");
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => ({
@@ -38,52 +50,36 @@ const TrashySidebar = () => {
   };
 
   const navigationItems = [
-    {
-      id: "dashboard",
-      icon: LayoutDashboard,
-      label: "Dashboard",
-    },
-    {
-      id: "explorer",
-      icon: FolderOpen,
-      label: "File Explorer",
-    },
+    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { id: "explorer", icon: FolderOpen, label: "File Explorer" },
     { id: "settings", icon: Settings, label: "Settings" },
   ];
 
   const dashboardItems = [
-    { icon: HardDrive, label: "Installed Apps", path: "/apps" },
-    { icon: FileText, label: "Documents", path: "/documents" },
-    { icon: Image, label: "Pictures", path: "/pictures" },
-    { icon: Video, label: "Videos", path: "/videos" },
-    { icon: Music, label: "Music", path: "/music" },
+    { icon: HardDrive, label: "Installed Apps" },
+    { icon: FileText, label: "Documents" },
+    { icon: Image, label: "Pictures" },
+    { icon: Video, label: "Videos" },
+    { icon: Music, label: "Music" },
   ];
 
   const explorerItems = [
-    { icon: FileText, label: "Documents", path: "/documents" },
-    { icon: Download, label: "Downloads", path: "/downloads" },
-    { icon: Image, label: "Pictures", path: "/pictures" },
-    { icon: Monitor, label: "Desktop", path: "/desktop" },
-    { icon: Music, label: "Music", path: "/music" },
-    { icon: Video, label: "Videos", path: "/videos" },
-    {
-      icon: Plus,
-      label: "Custom Path...",
-      path: "/custom",
-      isCustom: true,
-    },
+    { icon: FileText, label: "Documents" },
+    { icon: Download, label: "Downloads" },
+    { icon: Image, label: "Pictures" },
+    { icon: Monitor, label: "Desktop" },
+    { icon: Music, label: "Music" },
+    { icon: Video, label: "Videos" },
+    { icon: Plus, label: "Custom Path...", isCustom: true },
   ];
 
   const renderContent = () => {
-    switch (activeSection) {
+    switch (activePanel) {
       case "dashboard":
         return (
           <div className="space-y-2">
             <div className="flex items-center justify-between px-3 py-2">
-              <h3
-                className="text-sm font-medium"
-                style={{ color: "#F1F1F1" }}
-              >
+              <h3 className="text-sm font-medium" style={{ color: "#F1F1F1" }}>
                 Quick Access
               </h3>
               <Button
@@ -92,12 +88,6 @@ const TrashySidebar = () => {
                 onClick={() => toggleSection("dashboard")}
                 className="h-5 w-5 p-0"
                 style={{ color: "#F1F1F1", opacity: "0.7" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "1";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "0.7";
-                }}
               >
                 {expandedSections.dashboard ? (
                   <ChevronDown size={12} />
@@ -114,41 +104,34 @@ const TrashySidebar = () => {
                     variant="ghost"
                     className="w-full justify-start gap-3 px-3 py-2 h-auto transition-all duration-200"
                     style={{ color: "#F1F1F1" }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        "#5A5A5A";
-                      e.currentTarget.style.color = "#F1F1F1";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        "transparent";
-                      e.currentTarget.style.color = "#F1F1F1";
+                    onClick={() => {
+                      if (item.label === "Installed Apps") {
+                        setActiveItem("apps");
+                      } else {
+                        const folderKey = item.label.toLowerCase();
+                        const folder = commonFolders[folderKey];
+                        setActiveItem(folderKey);
+                        if (folder) setFolderPath(folder);
+                      }
                     }}
                   >
                     <item.icon
                       size={16}
-                      style={{
-                        color: "#F1F1F1",
-                        opacity: "0.7",
-                      }}
+                      style={{ color: "#F1F1F1", opacity: "0.7" }}
                     />
-                    <span className="text-sm">
-                      {item.label}
-                    </span>
+                    <span className="text-sm">{item.label}</span>
                   </Button>
                 ))}
               </div>
             )}
           </div>
         );
+
       case "explorer":
         return (
           <div className="space-y-2">
             <div className="flex items-center justify-between px-3 py-2">
-              <h3
-                className="text-sm font-medium"
-                style={{ color: "#F1F1F1" }}
-              >
+              <h3 className="text-sm font-medium" style={{ color: "#F1F1F1" }}>
                 File Browser
               </h3>
               <Button
@@ -157,12 +140,6 @@ const TrashySidebar = () => {
                 onClick={() => toggleSection("explorer")}
                 className="h-5 w-5 p-0"
                 style={{ color: "#F1F1F1", opacity: "0.7" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "1";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "0.7";
-                }}
               >
                 {expandedSections.explorer ? (
                   <ChevronDown size={12} />
@@ -186,42 +163,36 @@ const TrashySidebar = () => {
                         ? "1px dashed rgba(241, 241, 241, 0.3)"
                         : "none",
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        "#5A5A5A";
-                      e.currentTarget.style.color = "#F1F1F1";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        "transparent";
-                      e.currentTarget.style.color = "#F1F1F1";
+                    onClick={() => {
+                      if (item.isCustom) {
+                        setActiveItem("files");
+                      } else {
+                        const folderKey = item.label.toLowerCase();
+                        const folder = commonFolders[folderKey];
+                        if (folder) setFolderPath(folder);
+                        setActiveItem("files");
+                      }
                     }}
                   >
                     <item.icon
                       size={16}
                       style={{
-                        color: item.isCustom
-                          ? "#A7C957"
-                          : "#F1F1F1",
+                        color: item.isCustom ? "#A7C957" : "#F1F1F1",
                         opacity: item.isCustom ? "1" : "0.7",
                       }}
                     />
-                    <span className="text-sm">
-                      {item.label}
-                    </span>
+                    <span className="text-sm">{item.label}</span>
                   </Button>
                 ))}
               </div>
             )}
           </div>
         );
+
       case "settings":
         return (
           <div className="space-y-4 px-3">
-            <h3
-              className="text-sm font-medium"
-              style={{ color: "#F1F1F1" }}
-            >
+            <h3 className="text-sm font-medium" style={{ color: "#F1F1F1" }}>
               Settings
             </h3>
             <div className="space-y-2">
@@ -229,16 +200,6 @@ const TrashySidebar = () => {
                 variant="ghost"
                 className="w-full justify-start gap-3 px-3 py-2 h-auto transition-all duration-200"
                 style={{ color: "#F1F1F1" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "#5A5A5A";
-                  e.currentTarget.style.color = "#F1F1F1";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "transparent";
-                  e.currentTarget.style.color = "#F1F1F1";
-                }}
               >
                 <Settings
                   size={16}
@@ -250,16 +211,6 @@ const TrashySidebar = () => {
                 variant="ghost"
                 className="w-full justify-start gap-3 px-3 py-2 h-auto transition-all duration-200"
                 style={{ color: "#F1F1F1" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "#5A5A5A";
-                  e.currentTarget.style.color = "#F1F1F1";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "transparent";
-                  e.currentTarget.style.color = "#F1F1F1";
-                }}
               >
                 <Monitor
                   size={16}
@@ -271,16 +222,6 @@ const TrashySidebar = () => {
                 variant="ghost"
                 className="w-full justify-start gap-3 px-3 py-2 h-auto transition-all duration-200"
                 style={{ color: "#F1F1F1" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "#5A5A5A";
-                  e.currentTarget.style.color = "#F1F1F1";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "transparent";
-                  e.currentTarget.style.color = "#F1F1F1";
-                }}
               >
                 <HardDrive
                   size={16}
@@ -297,10 +238,7 @@ const TrashySidebar = () => {
   };
 
   return (
-    <div
-      className="flex h-screen"
-      style={{ backgroundColor: "#2B2B2B" }}
-    >
+    <div className="flex h-screen" style={{ backgroundColor: "#2B2B2B" }}>
       {/* Left Icon Panel */}
       <div
         className="w-16 flex flex-col items-center"
@@ -317,10 +255,7 @@ const TrashySidebar = () => {
             className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg"
             style={{ backgroundColor: "#3A5F3B" }}
           >
-            <span
-              className="text-lg"
-              style={{ color: "#F1F1F1" }}
-            >
+            <span className="text-lg" style={{ color: "#F1F1F1" }}>
               🦝
             </span>
           </div>
@@ -328,9 +263,7 @@ const TrashySidebar = () => {
 
         <Separator
           className="w-8 mb-4"
-          style={{
-            backgroundColor: "rgba(241, 241, 241, 0.1)",
-          }}
+          style={{ backgroundColor: "rgba(241, 241, 241, 0.1)" }}
         />
 
         {/* Navigation Icons */}
@@ -340,35 +273,14 @@ const TrashySidebar = () => {
               key={item.id}
               variant="ghost"
               size="sm"
-              onClick={() => setActiveSection(item.id)}
+              onClick={() => setActivePanel(item.id)}
               className={`w-10 h-10 p-0 rounded-lg transition-all duration-200 ${
-                activeSection === item.id
-                  ? "shadow-md"
-                  : "hover:shadow-sm"
+                activePanel === item.id ? "shadow-md" : "hover:shadow-sm"
               }`}
               style={{
                 backgroundColor:
-                  activeSection === item.id
-                    ? "#3A5F3B"
-                    : "transparent",
-                color:
-                  activeSection === item.id
-                    ? "#F1F1F1"
-                    : "#F1F1F1",
-              }}
-              onMouseEnter={(e) => {
-                if (activeSection !== item.id) {
-                  e.currentTarget.style.backgroundColor =
-                    "#5A5A5A";
-                  e.currentTarget.style.color = "#F1F1F1";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeSection !== item.id) {
-                  e.currentTarget.style.backgroundColor =
-                    "transparent";
-                  e.currentTarget.style.color = "#F1F1F1";
-                }
+                  activePanel === item.id ? "#3A5F3B" : "transparent",
+                color: "#F1F1F1",
               }}
               title={item.label}
             >
@@ -384,15 +296,6 @@ const TrashySidebar = () => {
             size="sm"
             className="w-10 h-10 p-0 rounded-lg transition-all duration-200"
             style={{ color: "#F1F1F1" }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#5A5A5A";
-              e.currentTarget.style.color = "#F1F1F1";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor =
-                "transparent";
-              e.currentTarget.style.color = "#F1F1F1";
-            }}
             title="User Profile"
           >
             <User size={18} />
@@ -420,14 +323,10 @@ const TrashySidebar = () => {
               className="w-8 h-8 rounded-md flex items-center justify-center"
               style={{ backgroundColor: "#3A5F3B" }}
             >
-              {navigationItems.find(
-                (item) => item.id === activeSection,
-              )?.icon &&
+              {navigationItems.find((item) => item.id === activePanel)?.icon &&
                 React.createElement(
-                  navigationItems.find(
-                    (item) => item.id === activeSection,
-                  )!.icon,
-                  { size: 16, style: { color: "#F1F1F1" } },
+                  navigationItems.find((item) => item.id === activePanel)!.icon,
+                  { size: 16, style: { color: "#F1F1F1" } }
                 )}
             </div>
             <div>
@@ -435,18 +334,14 @@ const TrashySidebar = () => {
                 className="text-lg font-medium capitalize"
                 style={{ color: "#F1F1F1" }}
               >
-                {activeSection}
+                {activePanel}
               </h2>
-              <p
-                className="text-xs opacity-70"
-                style={{ color: "#F1F1F1" }}
-              >
-                {activeSection === "dashboard" &&
+
+              <p className="text-xs opacity-70" style={{ color: "#F1F1F1" }}>
+                {activePanel === "dashboard" &&
                   "Quick access to common locations"}
-                {activeSection === "explorer" &&
-                  "Browse and manage your files"}
-                {activeSection === "settings" &&
-                  "Configure Trashu preferences"}
+                {activePanel === "explorer" && "Browse and manage your files"}
+                {activePanel === "settings" && "Configure Trashu preferences"}
               </p>
             </div>
           </div>
@@ -454,14 +349,12 @@ const TrashySidebar = () => {
 
         {/* Content */}
         <ScrollArea className="h-[calc(100vh-80px)]">
-          <div style={{ padding: "16px" }}>
-            {renderContent()}
-          </div>
+          <div style={{ padding: "16px" }}>{renderContent()}</div>
         </ScrollArea>
       </div>
 
       {/* Main Content Area Placeholder */}
-      <div
+      {/* <div
         className="flex-1 flex items-center justify-center"
         style={{ backgroundColor: "#F1F1F1" }}
       >
@@ -472,16 +365,10 @@ const TrashySidebar = () => {
           >
             <span className="text-4xl">🦝</span>
           </div>
-          <h3
-            className="text-xl font-medium mb-2"
-            style={{ color: "#2B2B2B" }}
-          >
+          <h3 className="text-xl font-medium mb-2" style={{ color: "#2B2B2B" }}>
             Welcome to Trashu
           </h3>
-          <p
-            className="mb-6 opacity-80"
-            style={{ color: "#4A4A4A" }}
-          >
+          <p className="mb-6 opacity-80" style={{ color: "#4A4A4A" }}>
             Your friendly storage manager
           </p>
           <Badge
@@ -504,12 +391,12 @@ const TrashySidebar = () => {
             }}
           >
             <p className="text-sm" style={{ color: "#F1F1F1" }}>
-              Select a section from the sidebar to get started
-              with managing your files and storage.
+              Select a section from the sidebar to get started with managing
+              your files and storage.
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
