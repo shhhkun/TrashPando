@@ -115,6 +115,7 @@ function createWindow() {
       contextIsolation: true, // secure
       nodeIntegration: false, // Let preload access node APIs
     },
+    autoHideMenuBar: true,
   });
 
   if (isDev) {
