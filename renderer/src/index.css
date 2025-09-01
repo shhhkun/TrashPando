@@ -4066,8 +4066,10 @@
   --secondary-foreground: #030213;
   --muted: #ececf0;
   --muted-foreground: #717182;
-  --accent: #e9ebef;
+
+  --accent: #3A5F3B;
   --accent-foreground: #030213;
+
   --destructive: #d4183d;
   --destructive-foreground: #fff;
   --border: #0000001a;
