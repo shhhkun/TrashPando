@@ -4,7 +4,7 @@
 
 Trashu is a desktop application designed to help users efficiently manage their storage. Built with Electron, it scans folders for duplicate, unused, and large files, providing clear insights and safe cleanup options. Trashu aims to go beyond basic file deletion by introducing smart metrics—such as last access time and usage frequency—to deliver personalized recommendations for organizing photos, games, documents, and more.
 
-_Built with: Electron, Node.js, React, Vite, JavaScript, Tailwind CSS_
+_Built with: Electron, Node.js, React, Vite, JavaScript, TypeScript, Tailwind CSS, Figma_
 
 ---
 
@@ -79,7 +79,7 @@ _Detailed instructions coming as features are implemented_
   - Dynamic select/unselect logic based on drag selection box
 - Load/scan common folders as quick navigations
 
-### **v1.1 - Upcoming**
+### **v1.1 - Sidebar Nav & Simple Metrics Scanning**
 
 - Updated layout to have a sidebar with primary Dashboard and File Explorer dropdowns
 - Dashboard:
@@ -94,6 +94,16 @@ _Detailed instructions coming as features are implemented_
   - Duplicate files
 - Moved recursive folder scanning on workers threads
 - Adjusted file scanning to avoid sensitive system files (winattr for Windows, "." prefix for UNIX/Linux/macOS)
+
+### **v1.2 - ???**
+
+- UI Overhaul
+  - Used Figma to test out layout & color palettes
+  - Creating app specific icon/logo
+- Optimize OS scanning
+  - Check worker thread compatibility
+  - Improve caching/fetching
+  - Move cache to lightweight database (SQLite)
 
 ### **v?.? - Later Development**
 
@@ -115,7 +125,13 @@ _Detailed instructions coming as features are implemented_
   - Will later make it togglable in settings for power users
 - [ ] Duplicate detection & improve metadata collection
 - [ ] Smart metrics integration (last access time, usage frequency)
-- [ ] Panda themed UI (big UI overhaul once core features are implemented and thoroughly tested)
+
+- [ ] Panda themed UI overhaul:
+  - Using Figma to create/test/plan out UI for:
+    - Sidebar panel
+    - Main content panels
+    - App specific logos
+    - Inclusion of future menus (settings, user profile, etc.)
 
 - [ ] Dashboard Implementation:
 
@@ -176,6 +192,9 @@ _Detailed instructions coming as features are implemented_
   - Implemented a global onMouseDown handler, to handle out of div selects
 - [ ] 'Ctrl +' behavior:
   - Holding 'Ctrl +' prevents dynamic drag select/deselect
+- [ ] Installed apps scanning hitrate)
+  - Could look into potential other folders like ones for Xbox Desktop or Microsoft Apps
+  - Icon scanning still limited, indexing likely bugged for .exe/.dll's
 
 ---
 
