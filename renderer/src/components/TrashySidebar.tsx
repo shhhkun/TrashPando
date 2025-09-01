@@ -19,7 +19,6 @@ import {
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
-import { Badge } from "./ui/badge";
 
 interface TrashySidebarProps {
   activeItem: string | null;
@@ -352,51 +351,6 @@ const TrashySidebar: React.FC<TrashySidebarProps> = ({
           <div style={{ padding: "16px" }}>{renderContent()}</div>
         </ScrollArea>
       </div>
-
-      {/* Main Content Area Placeholder */}
-      {/* <div
-        className="flex-1 flex items-center justify-center"
-        style={{ backgroundColor: "#F1F1F1" }}
-      >
-        <div className="text-center">
-          <div
-            className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
-            style={{ backgroundColor: "#3A5F3B" }}
-          >
-            <span className="text-4xl">🦝</span>
-          </div>
-          <h3 className="text-xl font-medium mb-2" style={{ color: "#2B2B2B" }}>
-            Welcome to Trashu
-          </h3>
-          <p className="mb-6 opacity-80" style={{ color: "#4A4A4A" }}>
-            Your friendly storage manager
-          </p>
-          <Badge
-            variant="secondary"
-            className="px-4 py-2 rounded-full"
-            style={{
-              backgroundColor: "#A7C957",
-              color: "#2B2B2B",
-              fontSize: "12px",
-            }}
-          >
-            🐾 Trash Panda Mode Active
-          </Badge>
-          <div
-            className="mt-8 p-6 rounded-lg shadow-sm"
-            style={{
-              backgroundColor: "#4A4A4A",
-              maxWidth: "400px",
-              border: "1px solid rgba(241, 241, 241, 0.1)",
-            }}
-          >
-            <p className="text-sm" style={{ color: "#F1F1F1" }}>
-              Select a section from the sidebar to get started with managing
-              your files and storage.
-            </p>
-          </div>
-        </div>
-      </div> */}
     </div>
   );
 };

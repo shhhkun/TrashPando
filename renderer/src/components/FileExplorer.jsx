@@ -3,11 +3,7 @@ import FileSelector from "./FileSelector";
 import FileList from "./FileList";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import Toast from "./Toast";
-
-// const pandaGreen = "rgb(76, 175, 80)"; // fresh green border for selected
-// const darkGrey = "rgb(34, 34, 34)"; // main bg color (dark grey)
-// const hoverDarkGrey = "rgb(54, 54, 54)"; // hover bg color (lighter dark grey)
-// const lightText = "rgba(230, 230, 230, 1)"; // text color (light)
+import { Button } from "./ui/button";
 
 export default function FileExplorer({
   folderPath,
@@ -44,11 +40,13 @@ export default function FileExplorer({
     <div className="flex flex-col p-4 gap-4">
       {/* Select Folder and Delete Buttons */}
       <div className="flex gap-2">
-        <button className="no-drag" onClick={handleSelectFolder}>
-          Select Folder
-        </button>
 
-        <button
+        <Button className="no-drag" onClick={handleSelectFolder}>
+          Select Folder
+        </Button>
+
+        <Button
+          variant="destructive"
           className="no-drag"
           onClick={() => {
             setFilesToDelete(Array.from(selectedFiles));
@@ -57,7 +55,7 @@ export default function FileExplorer({
           disabled={selectedFiles.size === 0}
         >
           Delete Selected
-        </button>
+        </Button>
 
         {/* Sort Dropdown */}
         <select
@@ -73,17 +71,17 @@ export default function FileExplorer({
         </select>
 
         {/* Ascending/Descending Toggle */}
-        <button
+        <Button
           className="no-drag"
           onClick={() =>
             setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
           }
         >
           {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
-        </button>
+        </Button>
 
         {/* Duplicate Scanner Test */}
-        <button
+        <Button
           className="no-drag"
           onClick={async () => {
             if (!folderPath) return;
@@ -118,56 +116,46 @@ export default function FileExplorer({
           }}
         >
           Test Duplicate Scan
-        </button>
+        </Button>
       </div>
 
-      {/* Apps Installed Scanner Test */}
-      <button
+      {/* Registry Scanner Test */}
+      <Button
         className="no-drag"
         onClick={async () => {
           try {
-            console.log("Scanning installed apps...");
-            const apps = await window.electronAPI.scanInstalledApps();
+            console.log("Scanning installed apps (registry)...");
+            const apps = await window.electronAPI.scanInstalledAppsRegistry();
 
-            console.log(apps);
+            // Sort apps A → Z by display name
+            apps.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
-            // format output
-            let output = "Installed Apps:\n\n";
+            let output = "Installed Apps (Registry):\n\n";
 
-            apps.forEach((folderItem, index) => {
-              // folderItem can have multiple executables
-              if (Array.isArray(folderItem)) {
-                output += `Folder ${index + 1}:\n`;
-                folderItem.forEach((app, i) => {
-                  output += `  ${i + 1}. ${app.name || "Unknown"}\n`;
-                  if (app.version) output += `     Version: ${app.version}\n`;
-                  if (app.path) output += `     Path: ${app.path}\n`;
-                });
-                output += "\n";
-              } else {
-                output += `${index + 1}. ${folderItem.name || "Unknown"}\n`;
-                if (folderItem.version)
-                  output += `   Version: ${folderItem.version}\n`;
-                if (folderItem.path) output += `   Path: ${folderItem.path}\n`;
-                output += "\n";
-              }
+            apps.forEach((app, index) => {
+              output += `${index + 1}. ${app.name || "Unknown"}\n`;
+              if (app.uninstallString)
+                output += `   Uninstall: ${app.uninstallString}\n`;
+              if (app.size)
+                output += `   Size: ${(app.size / 1024).toFixed(2)} KB\n`;
+              if (app.iconPath) output += `   Icon: ${app.iconPath}\n`;
+              if (app.publisher) output += `   Publisher: ${app.publisher}\n`;
+              if (app.version) output += `   Version: ${app.version}\n`;
+              output += "\n";
             });
 
             const outputFilePath = await window.electronAPI.writeFile(
-              "output.txt",
+              "output2.txt",
               output
             );
-            console.log(
-              "Installed apps scan results written to:",
-              outputFilePath
-            );
+            console.log("Registry scan results written to:", outputFilePath);
           } catch (err) {
-            console.error("Installed apps scan error:", err);
+            console.error("Registry scan error:", err);
           }
         }}
       >
-        Test Apps Installed Scan
-      </button>
+        Test Registry Installed Scan
+      </Button>
 
       {/* Folder Path Display */}
       <div className="italic">{folderPath || "No folder selected"}</div>

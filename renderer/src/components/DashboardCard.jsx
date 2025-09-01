@@ -4,6 +4,7 @@ import FileList from "./FileList";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import Toast from "./Toast";
 import { getFromCache, setInCache, invalidateCache } from "../cache";
+import { Button } from "./ui/button";
 
 export default function DashboardCard({
   title,
@@ -125,13 +126,13 @@ export default function DashboardCard({
   const handleToggleExpand = () => setExpanded((prev) => !prev);
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 flex flex-col gap-2">
+    <div className="bg-gray-900 p-4 flex flex-col gap-2">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">{title}</h2>
-        <button onClick={handleToggleExpand}>
+        <Button variant="secondary" size="sm" onClick={handleToggleExpand}>
           {expanded ? "Collapse" : "View"}
-        </button>
+        </Button>
       </div>
 
       {/* Total Size */}
@@ -149,9 +150,10 @@ export default function DashboardCard({
       {expanded && !loading && (
         <div
           className="flex-1 overflow-auto mt-2"
-          style={{ maxHeight: "300px" }}
         >
-          <button
+          <Button
+            variant="destructive"
+            size="sm"
             className="no-drag"
             onClick={() => {
               setFilesToDelete(Array.from(selectedFiles));
@@ -160,7 +162,7 @@ export default function DashboardCard({
             disabled={selectedFiles.size === 0}
           >
             Delete Selected
-          </button>
+          </Button>
 
           {/* Sort Dropdown */}
           <select
@@ -175,19 +177,25 @@ export default function DashboardCard({
             ))}
           </select>
 
-          <button onClick={() => setFolderPath(folderPath)}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setFolderPath(folderPath)}
+          >
             Refresh Size
-          </button>
+          </Button>
 
           {/* Ascending/Descending Toggle */}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             className="no-drag"
             onClick={() =>
               setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
             }
           >
             {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
-          </button>
+          </Button>
 
           <FileSelector
             containerRef={cardFileListRef}

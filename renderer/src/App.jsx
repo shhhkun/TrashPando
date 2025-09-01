@@ -3,12 +3,13 @@ import FileExplorer from "./components/FileExplorer";
 import DashboardCard from "./components/DashboardCard";
 import InstalledAppsCard from "./components/InstalledAppsCard";
 import TrashySidebar from "./components/TrashySidebar"; // tsx
+import { Badge } from "./components/ui/badge";
 
 const darkGrey = "rgb(34, 34, 34)";
 const lightText = "rgba(230, 230, 230, 1)";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("apps");
+  const [activeTab, setActiveTab] = useState("home");
 
   const [expandedGroups, setExpandedGroups] = useState({
     dashboard: true,
@@ -139,8 +140,8 @@ function App() {
 
   return (
     <div
+      className="flex h-screen overflow-hidden"
       style={{
-        display: "flex",
         height: "100vh",
         width: "100vw",
         backgroundColor: darkGrey,
@@ -149,244 +150,113 @@ function App() {
     >
       {/* Sidebar */}
       <TrashySidebar
-        activeSection={activeTab}
-        setActiveSection={setActiveTab}
+        activeItem={activeTab}
+        setActiveItem={setActiveTab}
         folderPath={folderPath}
         setFolderPath={setFolderPath}
         commonFolders={commonFolders}
       />
 
-      {/* <div
-        style={{
-          width: "250px",
-          backgroundColor: "#222",
-          padding: "20px",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div>
-          <button
-            style={{
-              width: "100%",
-              textAlign: "left",
-              padding: "8px",
-              fontWeight: "bold",
-              background: "none",
-              border: "none",
-              color: lightText,
-              cursor: "pointer",
-            }}
-            onClick={() => toggleGroup("dashboard")}
-          >
-            Dashboard {expandedGroups.dashboard ? "▼" : "▶"}
-          </button>
-          {expandedGroups.dashboard && (
-            <div
-              style={{
-                marginLeft: "10px",
-                display: "flex",
-                flexDirection: "column",
-                paddingTop: "12px",
-                gap: "4px",
-              }}
-            >
-              {dashboardItems.map((item) => (
-                <button
-                  key={item}
-                  onClick={() => {
-                    if (item === "Installed Apps") {
-                      setActiveTab("apps");
-                    } else {
-                      const folderKey = item.toLowerCase();
-                      const folder = commonFolders[folderKey];
-                      setActiveTab(folderKey);
-                      if (folder) setFolderPath(folder); // force folderPath to update
-                    }
-                  }}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div style={{ marginTop: "20px" }}>
-          <button
-            style={{
-              width: "100%",
-              textAlign: "left",
-              padding: "8px",
-              fontWeight: "bold",
-              background: "none",
-              border: "none",
-              color: lightText,
-              cursor: "pointer",
-            }}
-            onClick={() => toggleGroup("fileExplorer")}
-          >
-            File Explorer {expandedGroups.fileExplorer ? "▼" : "▶"}
-          </button>
-          {expandedGroups.fileExplorer && (
-            <div
-              style={{
-                marginLeft: "10px",
-                display: "flex",
-                flexDirection: "column",
-                paddingTop: "12px",
-                gap: "4px",
-              }}
-            >
-              {Object.entries(commonFolders).map(([name, path]) => (
-                <button
-                  key={name}
-                  onClick={() => {
-                    setFolderPath(path); // <-- sets the folderPath in App.jsx
-                    setActiveTab("files"); // <-- switches main panel to FileExplorer
-                  }}
-                >
-                  {name.charAt(0).toUpperCase() + name.slice(1)}
-                </button>
-              ))}
-              <button onClick={() => setActiveTab("files")}>
-                Custom Path…
-              </button>
-            </div>
-          )}
-        </div>
-      </div> */}
-
       {/* Main Panel */}
-      <div style={{ flex: 1, backgroundColor: "#333", padding: "20px" }}>
-        <div className="h-14 border-b border-gray-800 flex items-center px-4"></div>
+      {/* Home Screen */}
+      {activeTab === "home" && (
         <div
-          className="flex-1 overflow-auto p-4"
-          style={{ background: "#333" }}
+          className="w-full h-full flex items-center justify-center"
+          style={{ backgroundColor: "#F1F1F1" }}
         >
-          {activeTab === "files" && (
-            <FileExplorer
-              // navigation props
-              folderPath={folderPath}
-              setFolderPath={setFolderPath}
-              pathSeparator={pathSeparator}
-              // files
-              files={files}
-              setFiles={setFiles}
-              selectedFiles={selectedFiles}
-              setSelectedFiles={setSelectedFiles}
-              // popups/prompts
-              showConfirm={showConfirm}
-              setShowConfirm={setShowConfirm}
-              toastMsg={toastMsg}
-              setToastMsg={setToastMsg}
-              toastType={toastType}
-              // actions
-              setFilesToDelete={setFilesToDelete}
-              handleSelectFolder={handleSelectFolder}
-              confirmDelete={confirmDelete}
-            />
-          )}
-
-          {activeTab === "apps" && <InstalledAppsCard />}
-
-          {["documents", "pictures", "videos", "music"].includes(activeTab) && (
-            <DashboardCard
-              title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-              folderPath={folderPath}
-              setFolderPath={setFolderPath}
-              files={files}
-              setFiles={setFiles}
-              selectedFiles={selectedFiles}
-              setSelectedFiles={setSelectedFiles}
-              showConfirm={showConfirm}
-              setShowConfirm={setShowConfirm}
-              toastMsg={toastMsg}
-              setToastMsg={setToastMsg}
-              toastType={toastType}
-              setFilesToDelete={setFilesToDelete}
-              pathSeparator={pathSeparator}
-              confirmDelete={confirmDelete}
-            />
-          )}
-
-          {/* {activeTab === "documents" && (
-            <DashboardCard
-              title="Documents"
-              folderPath={folderPath}
-              setFolderPath={setFolderPath}
-              files={files}
-              setFiles={setFiles}
-              selectedFiles={selectedFiles}
-              setSelectedFiles={setSelectedFiles}
-              showConfirm={showConfirm}
-              setShowConfirm={setShowConfirm}
-              toastMsg={toastMsg}
-              setToastMsg={setToastMsg}
-              toastType={toastType}
-              setFilesToDelete={setFilesToDelete}
-              pathSeparator={pathSeparator}
-              confirmDelete={confirmDelete}
-            />
-          )}
-          {activeTab === "pictures" && (
-            <DashboardCard
-              title="Pictures"
-              folderPath={folderPath}
-              setFolderPath={setFolderPath}
-              files={files}
-              setFiles={setFiles}
-              selectedFiles={selectedFiles}
-              setSelectedFiles={setSelectedFiles}
-              showConfirm={showConfirm}
-              setShowConfirm={setShowConfirm}
-              toastMsg={toastMsg}
-              setToastMsg={setToastMsg}
-              toastType={toastType}
-              setFilesToDelete={setFilesToDelete}
-              pathSeparator={pathSeparator}
-              confirmDelete={confirmDelete}
-            />
-          )}
-          {activeTab === "videos" && (
-            <DashboardCard
-              title="Videos"
-              folderPath={folderPath}
-              setFolderPath={setFolderPath}
-              files={files}
-              setFiles={setFiles}
-              selectedFiles={selectedFiles}
-              setSelectedFiles={setSelectedFiles}
-              showConfirm={showConfirm}
-              setShowConfirm={setShowConfirm}
-              toastMsg={toastMsg}
-              setToastMsg={setToastMsg}
-              toastType={toastType}
-              setFilesToDelete={setFilesToDelete}
-              pathSeparator={pathSeparator}
-              confirmDelete={confirmDelete}
-            />
-          )}
-          {activeTab === "music" && (
-            <DashboardCard
-              title="Music"
-              folderPath={folderPath}
-              setFolderPath={setFolderPath}
-              files={files}
-              setFiles={setFiles}
-              selectedFiles={selectedFiles}
-              setSelectedFiles={setSelectedFiles}
-              showConfirm={showConfirm}
-              setShowConfirm={setShowConfirm}
-              toastMsg={toastMsg}
-              setToastMsg={setToastMsg}
-              toastType={toastType}
-              setFilesToDelete={setFilesToDelete}
-              pathSeparator={pathSeparator}
-              confirmDelete={confirmDelete}
-            />
-          )} */}
+          <div className="text-center">
+            <div
+              className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+              style={{ backgroundColor: "#3A5F3B" }}
+            >
+              <span className="text-4xl">🦝</span>
+            </div>
+            <h3
+              className="text-xl font-medium mb-2"
+              style={{ color: "#2B2B2B" }}
+            >
+              Welcome to Trashu
+            </h3>
+            <p className="mb-6 opacity-80" style={{ color: "#4A4A4A" }}>
+              Your friendly storage manager
+            </p>
+            <Badge
+              variant="secondary"
+              className="px-4 py-2 rounded-full"
+              style={{
+                backgroundColor: "#A7C957",
+                color: "#2B2B2B",
+                fontSize: "12px",
+              }}
+            >
+              🐾 Trash Panda Mode Active
+            </Badge>
+            <div
+              className="mt-8 p-6 rounded-lg shadow-sm"
+              style={{
+                backgroundColor: "#4A4A4A",
+                maxWidth: "400px",
+                border: "1px solid rgba(241, 241, 241, 0.1)",
+              }}
+            >
+              <p className="text-sm" style={{ color: "#F1F1F1" }}>
+                Select a section from the sidebar to get started with managing
+                your files and storage.
+              </p>
+            </div>
+          </div>
         </div>
+      )}
+
+      <div
+        className="w-full flex-1 overflow-auto"
+        style={{ flex: 1, backgroundColor: "#333", padding: "20px" }}
+      >
+        {activeTab === "files" && (
+          <FileExplorer
+            // navigation props
+            folderPath={folderPath}
+            setFolderPath={setFolderPath}
+            pathSeparator={pathSeparator}
+            // files
+            files={files}
+            setFiles={setFiles}
+            selectedFiles={selectedFiles}
+            setSelectedFiles={setSelectedFiles}
+            // popups/prompts
+            showConfirm={showConfirm}
+            setShowConfirm={setShowConfirm}
+            toastMsg={toastMsg}
+            setToastMsg={setToastMsg}
+            toastType={toastType}
+            // actions
+            setFilesToDelete={setFilesToDelete}
+            handleSelectFolder={handleSelectFolder}
+            confirmDelete={confirmDelete}
+          />
+        )}
+
+        {activeTab === "apps" && <InstalledAppsCard />}
+
+        {["documents", "pictures", "videos", "music"].includes(activeTab) && (
+          <DashboardCard
+            title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+            folderPath={folderPath}
+            setFolderPath={setFolderPath}
+            files={files}
+            setFiles={setFiles}
+            selectedFiles={selectedFiles}
+            setSelectedFiles={setSelectedFiles}
+            showConfirm={showConfirm}
+            setShowConfirm={setShowConfirm}
+            toastMsg={toastMsg}
+            setToastMsg={setToastMsg}
+            toastType={toastType}
+            setFilesToDelete={setFilesToDelete}
+            pathSeparator={pathSeparator}
+            confirmDelete={confirmDelete}
+          />
+        )}
       </div>
     </div>
   );
