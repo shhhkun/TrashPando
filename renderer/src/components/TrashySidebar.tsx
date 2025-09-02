@@ -29,9 +29,9 @@ interface TrashySidebarProps {
 }
 
 const TrashySidebar: React.FC<TrashySidebarProps> = ({
-  activeItem,
+  //activeItem,
   setActiveItem,
-  folderPath,
+  //folderPath,
   setFolderPath,
   commonFolders,
 }) => {
@@ -254,9 +254,16 @@ const TrashySidebar: React.FC<TrashySidebarProps> = ({
             className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg"
             style={{ backgroundColor: "#3A5F3B" }}
           >
-            <span className="text-lg" style={{ color: "#F1F1F1" }}>
+            <Button
+              title="Home Screen"
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveItem("home")}
+              className="text-lg w-10 h-10 p-0 rounded-lg transition-all duration-200 hover:shadow-sm"
+              style={{ color: "#F1F1F1" }}
+            >
               🦝
-            </span>
+            </Button>
           </div>
         </div>
 

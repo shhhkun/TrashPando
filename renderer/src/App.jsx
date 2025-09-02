@@ -9,12 +9,7 @@ const darkGrey = "rgb(34, 34, 34)";
 const lightText = "rgba(230, 230, 230, 1)";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("home");
-
-  const [expandedGroups, setExpandedGroups] = useState({
-    dashboard: true,
-    fileExplorer: false,
-  });
+  const [activeTab, setActiveTab] = useState("pictures"); // default: home
 
   const [folderPath, setFolderPath] = useState(null);
   const [pathSeparator, setPathSeparator] = useState("/");
@@ -27,21 +22,6 @@ function App() {
   const [toastMsg, setToastMsg] = useState(null);
   const [toastType, setToastType] = useState("info");
   const [filesToDelete, setFilesToDelete] = useState([]);
-
-  const dashboardItems = [
-    "Installed Apps",
-    "Documents",
-    "Pictures",
-    "Videos",
-    "Music",
-  ];
-
-  const toggleGroup = (groupName) => {
-    setExpandedGroups((prev) => ({
-      ...prev,
-      [groupName]: !prev[groupName], // toggle only the clicked group
-    }));
-  };
 
   // fetch common folders dynamically
   useEffect(() => {
@@ -150,14 +130,13 @@ function App() {
     >
       {/* Sidebar */}
       <TrashySidebar
-        activeItem={activeTab}
+        //activeItem={activeTab}
         setActiveItem={setActiveTab}
-        folderPath={folderPath}
+        //folderPath={folderPath}
         setFolderPath={setFolderPath}
         commonFolders={commonFolders}
       />
 
-      {/* Main Panel */}
       {/* Home Screen */}
       {activeTab === "home" && (
         <div
@@ -173,11 +152,14 @@ function App() {
             </div>
             <h3
               className="text-xl font-medium mb-2"
-              style={{ color: "#2B2B2B" }}
+              style={{ color: "#2B2B2B" }} // primary font clr
             >
               Welcome to Trashu
             </h3>
-            <p className="mb-6 opacity-80" style={{ color: "#4A4A4A" }}>
+            <p
+              className="mb-6 opacity-80"
+              style={{ color: "#4A4A4A" }} // secondary font clr
+            >
               Your friendly storage manager
             </p>
             <Badge
@@ -208,56 +190,52 @@ function App() {
         </div>
       )}
 
-      <div
-        className="w-full flex-1 overflow-auto"
-        style={{ flex: 1, backgroundColor: "#333", padding: "20px" }}
-      >
-        {activeTab === "files" && (
-          <FileExplorer
-            // navigation props
-            folderPath={folderPath}
-            setFolderPath={setFolderPath}
-            pathSeparator={pathSeparator}
-            // files
-            files={files}
-            setFiles={setFiles}
-            selectedFiles={selectedFiles}
-            setSelectedFiles={setSelectedFiles}
-            // popups/prompts
-            showConfirm={showConfirm}
-            setShowConfirm={setShowConfirm}
-            toastMsg={toastMsg}
-            setToastMsg={setToastMsg}
-            toastType={toastType}
-            // actions
-            setFilesToDelete={setFilesToDelete}
-            handleSelectFolder={handleSelectFolder}
-            confirmDelete={confirmDelete}
-          />
-        )}
+      {/* Other Main Panels */}
+      {activeTab === "files" && (
+        <FileExplorer
+          // navigation props
+          folderPath={folderPath}
+          setFolderPath={setFolderPath}
+          pathSeparator={pathSeparator}
+          // files
+          files={files}
+          setFiles={setFiles}
+          selectedFiles={selectedFiles}
+          setSelectedFiles={setSelectedFiles}
+          // popups/prompts
+          showConfirm={showConfirm}
+          setShowConfirm={setShowConfirm}
+          toastMsg={toastMsg}
+          setToastMsg={setToastMsg}
+          toastType={toastType}
+          // actions
+          setFilesToDelete={setFilesToDelete}
+          handleSelectFolder={handleSelectFolder}
+          confirmDelete={confirmDelete}
+        />
+      )}
 
-        {activeTab === "apps" && <InstalledAppsCard />}
+      {activeTab === "apps" && <InstalledAppsCard />}
 
-        {["documents", "pictures", "videos", "music"].includes(activeTab) && (
-          <DashboardCard
-            title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-            folderPath={folderPath}
-            setFolderPath={setFolderPath}
-            files={files}
-            setFiles={setFiles}
-            selectedFiles={selectedFiles}
-            setSelectedFiles={setSelectedFiles}
-            showConfirm={showConfirm}
-            setShowConfirm={setShowConfirm}
-            toastMsg={toastMsg}
-            setToastMsg={setToastMsg}
-            toastType={toastType}
-            setFilesToDelete={setFilesToDelete}
-            pathSeparator={pathSeparator}
-            confirmDelete={confirmDelete}
-          />
-        )}
-      </div>
+      {["documents", "pictures", "videos", "music"].includes(activeTab) && (
+        <DashboardCard
+          title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+          folderPath={folderPath}
+          setFolderPath={setFolderPath}
+          files={files}
+          setFiles={setFiles}
+          selectedFiles={selectedFiles}
+          setSelectedFiles={setSelectedFiles}
+          showConfirm={showConfirm}
+          setShowConfirm={setShowConfirm}
+          toastMsg={toastMsg}
+          setToastMsg={setToastMsg}
+          toastType={toastType}
+          setFilesToDelete={setFilesToDelete}
+          pathSeparator={pathSeparator}
+          confirmDelete={confirmDelete}
+        />
+      )}
     </div>
   );
 }
