@@ -3,55 +3,111 @@
   --darkGrey: rgb(34, 34, 34);
   --hoverDarkGrey: rgb(54, 54, 54);
   --lightText: rgba(230, 230, 230, 1);
+  --bg: #f1f1f1;
+  --primary: #2b2b2b;
+  --secondary: #4a4a4a;
+  --main-content-bg: #ffffff;
+  --header-text-color: #616161;
+  --divider-color: #e0e0e0;
+  --row-hover-bg: #f5f5f5;
+  --selected-bg: rgba(76, 175, 80, 0.1);
+  --even-row-bg: #fafafa;
+  --disabled-indicator-color: #ef5350; /* clear, soft red */
 }
 
+/* entire wrapper */
+.file-list-wrapper {
+  background-color: var(--main-content-bg);
+  border-radius: 8px;
+  max-height: 700px; /* may adjust */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* non-scrollable header area */
+.file-list-controls {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--divider-color);
+}
+
+/* scrollable content */
 .file-list-container {
-  margin-top: 10px;
-  max-height: 700px;
-  width: 50vw;
-  max-width: 800px;
   overflow-y: auto;
-  border-top: 1px solid #555;
-  background-color: var(--darkGrey);
+  overflow-x: hidden;
+  flex-grow: 1; /* take up all available vertical space */
   user-select: none;
   font-size: 0.9rem;
+  color: var(--primary);
 }
 
 .file-list-header {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
-  border-bottom: 1px solid #555;
-  padding: 6px 8px;
-  font-weight: bold;
-  color: var(--lightText);
-  column-gap: 12px;
+  padding: 12px 16px;
+  font-weight: 500;
+  color: var(--header-text-color);
+  column-gap: 20px;
+  border-bottom: none;
 }
 
 .file-list-header > div {
-  border-right: 1px solid #555;
-  padding-right: 8px;
-}
-
-.file-list-header > div:last-child {
   border-right: none;
+  padding-right: 0;
 }
 
 .file-list-empty {
-  padding: 10px;
-  color: var(--lightText);
+  padding: 20px;
+  color: var(--header-text-color);
+  text-align: center;
 }
 
 .file-item {
+  position: relative; /* for the disabled indicator */
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
   align-items: center;
-  column-gap: 12px;
-  padding: 6px 8px;
+  column-gap: 20px;
+  padding: 12px 16px;
   cursor: pointer;
-  border-left: 6px solid transparent;
-  color: var(--lightText);
-  background-color: var(--darkGrey);
+  background-color: transparent;
   transition: background-color 0.15s ease;
+}
+
+/* zebra pattern effect on even-numbered rows */
+.file-item:nth-child(even) {
+  background-color: var(--even-row-bg);
+}
+
+.file-item:hover {
+  background-color: var(--row-hover-bg);
+}
+
+.file-item.selected {
+  background-color: var(--selected-bg);
+}
+
+.file-item.selected:hover {
+  background-color: rgba(76, 175, 80, 0.15);
+}
+
+.file-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.file-item.disabled::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 3px; /* The width of the "red chunk" */
+  background-color: var(--disabled-indicator-color);
 }
 
 .file-item > div:first-child {
@@ -62,29 +118,12 @@
 
 .type-text {
   flex: 1;
-  min-width: 0; /* allow shrinking below content width */
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.file-item:hover {
-  background-color: var(--hoverDarkGrey);
-}
-
-.file-item.selected {
-  background-color: rgba(76, 175, 80, 0.15);
-  border-left-color: var(--pandaGreen);
-}
-
-.file-item.selected:hover {
-  background-color: rgba(76, 175, 80, 0.2); /* slightly brighter on hover */
-}
-
-.file-item.disabled {
-  background-color: rgb(105, 52, 52);
-  cursor: not-allowed;
-}
 .file-item .open-btn {
   justify-self: end;
   padding-left: 8px;

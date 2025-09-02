@@ -6,6 +6,9 @@ import Toast from "./Toast";
 import { getFromCache, setInCache, invalidateCache } from "../cache";
 import { Button } from "./ui/button";
 
+const primary = "#2B2B2B";
+const secondary = "#4A4A4A";
+
 export default function DashboardCard({
   title,
   folderPath,
@@ -23,23 +26,11 @@ export default function DashboardCard({
   pathSeparator,
   confirmDelete,
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [loading, setLoading] = useState(false);
   const [visibleSize, setVisibleSize] = useState(null);
   const [hiddenSize, setHiddenSize] = useState(null);
   const cardFileListRef = useRef(null);
-
-  const [sortField, setSortField] = useState("name");
-  const [sortOrder, setSortOrder] = useState("asc");
-
-  const sortOptions = [
-    { label: "Name", value: "name" },
-    { label: "Date Modified", value: "dateModified" },
-    { label: "Date Created", value: "dateCreated" },
-    { label: "Size", value: "size" },
-    { label: "Type", value: "type" },
-    { label: "Item Count", value: "itemCount" },
-  ];
 
   useEffect(() => {
     if (!folderPath) return;
@@ -126,14 +117,32 @@ export default function DashboardCard({
   const handleToggleExpand = () => setExpanded((prev) => !prev);
 
   return (
-    <div className="bg-gray-900 p-4 flex flex-col gap-2">
+    <div
+      className="w-full h-full p-4 flex flex-col gap-2"
+      style={{
+        backgroundColor: "#ccccccff",
+      }}
+    >
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        <Button variant="secondary" size="sm" onClick={handleToggleExpand}>
-          {expanded ? "Collapse" : "View"}
-        </Button>
+        <h2
+          className="text-lg font-semibold"
+          style={{
+            color: "#2B2B2B",
+          }}
+        >
+          {title}
+        </h2>
       </div>
+
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-auto"
+        onClick={handleToggleExpand}
+      >
+        {expanded ? "Collapse" : "View"}
+      </Button>
 
       {/* Total Size */}
       <div className="text-sm text-gray-400">
@@ -148,55 +157,7 @@ export default function DashboardCard({
 
       {/* FileList */}
       {expanded && !loading && (
-        <div
-          className="flex-1 overflow-auto mt-2"
-        >
-          <Button
-            variant="destructive"
-            size="sm"
-            className="no-drag"
-            onClick={() => {
-              setFilesToDelete(Array.from(selectedFiles));
-              setShowConfirm(true);
-            }}
-            disabled={selectedFiles.size === 0}
-          >
-            Delete Selected
-          </Button>
-
-          {/* Sort Dropdown */}
-          <select
-            className="no-drag border rounded px-3 py-1 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={sortField}
-            onChange={(e) => setSortField(e.target.value)}
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setFolderPath(folderPath)}
-          >
-            Refresh Size
-          </Button>
-
-          {/* Ascending/Descending Toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="no-drag"
-            onClick={() =>
-              setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
-            }
-          >
-            {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
-          </Button>
-
+        <div className="flex-1 mt-2">
           <FileSelector
             containerRef={cardFileListRef}
             items={files}
@@ -222,8 +183,8 @@ export default function DashboardCard({
                   setFiles(scannedFiles);
                   setSelectedFiles(new Set());
                 }}
-                sortField={sortField}
-                sortOrder={sortOrder}
+                setFilesToDelete={setFilesToDelete}
+                setShowConfirm={setShowConfirm}
               />
             )}
             onSelectionChange={(newSelection) =>

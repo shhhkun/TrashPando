@@ -259,7 +259,7 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
   return (
     <div
       ref={containerRef}
-      className="w-full max-w-xl h-[400px] bg-gray-800 rounded-lg p-3 overflow-y-auto space-y-2 border border-gray-600 relative"
+      //className="w-full max-w-xl h-[400px] bg-gray-800 rounded-lg p-3 overflow-y-auto space-y-2 border border-gray-600 relative"
     >
       <style>{`
         .selection-box {

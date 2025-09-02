@@ -1,7 +1,8 @@
 import "../styles/FileList.css"; // CSS file for hover/selection
 import "../utils/friendlyFileTypes"; // import friendly file types utility
 import { getFriendlyFileType } from "../utils/friendlyFileTypes";
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
+import { Button } from "./ui/button";
 
 function formatFileSize(bytes) {
   if (bytes === 0) return "0 bytes";
@@ -55,23 +56,79 @@ function sortFiles(files, field, direction) {
   return [...files].sort(compare);
 }
 
+const sortOptions = [
+  { label: "Name", value: "name" },
+  { label: "Date Modified", value: "dateModified" },
+  { label: "Date Created", value: "dateCreated" },
+  { label: "Size", value: "size" },
+  { label: "Type", value: "type" },
+  { label: "Item Count", value: "itemCount" },
+];
+
 export default function FileList({
   files,
   selectedFiles,
   toggleSelectFile,
   listRef,
   onOpenFolder,
-  sortField,
-  sortOrder,
+  setFilesToDelete,
+  setShowConfirm,
 }) {
-  
+  const [sortField, setSortField] = useState("name");
+  const [sortOrder, setSortOrder] = useState("asc");
+
   const sortedFiles = useMemo(() => {
     return sortFiles(files, sortField, sortOrder);
   }, [files, sortField, sortOrder]);
 
   return (
-    <div ref={listRef} className="file-list-container">
-      {/* Header bar with vertical separators */}
+    <div className="file-list-wrapper">
+      <div className="file-list-controls">
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => {
+            setFilesToDelete(Array.from(selectedFiles));
+            setShowConfirm(true);
+          }}
+          disabled={selectedFiles.size === 0}
+        >
+          Delete Selected
+        </Button>
+
+        {/* Sort Dropdown */}
+        <select
+          className="border rounded px-3 py-1 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={sortField}
+          onChange={(e) => setSortField(e.target.value)}
+        >
+          {sortOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setFolderPath(folderPath)}
+        >
+          Refresh Size
+        </Button>
+
+        {/* Ascending/Descending Toggle */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() =>
+            setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+          }
+        >
+          {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
+        </Button>
+      </div>
+
       <div className="file-list-header">
         <div>Name</div>
         <div>Date Modified</div>
@@ -79,80 +136,83 @@ export default function FileList({
         <div>Type</div>
       </div>
 
-      {/* Files list */}
-      {sortedFiles.length === 0 ? (
-        <div className="file-list-empty">No files to display</div>
-      ) : (
-        sortedFiles.map((file) => {
-          const isSelected = selectedFiles.has(file.name);
+      {/* Header bar with vertical separators */}
+      <div ref={listRef} className="file-list-container">
+        {/* Files list */}
+        {sortedFiles.length === 0 ? (
+          <div className="file-list-empty">No files to display</div>
+        ) : (
+          sortedFiles.map((file) => {
+            const isSelected = selectedFiles.has(file.name);
 
-          return (
-            <div
-              key={file.name}
-              className={`file-item ${isSelected ? "selected" : ""} ${
-                file.isDirectory && !file.isEmptyFolder ? "disabled" : ""
-              }`}
-              data-id={file.name}
-              data-name={file.name}
-              data-selectable
-              onClick={() => {
-                if (!(file.isDirectory && !file.isEmptyFolder)) {
-                  toggleSelectFile(file.name);
-                }
-              }}
-            >
+            return (
               <div
-                title={
-                  file.isDirectory
-                    ? `Created: ${new Date(file.created).toLocaleString()}
+                key={file.name}
+                className={`file-item ${isSelected ? "selected" : ""} ${
+                  file.isDirectory && !file.isEmptyFolder ? "disabled" : ""
+                }`}
+                data-id={file.name}
+                data-name={file.name}
+                data-selectable
+                onClick={() => {
+                  if (!(file.isDirectory && !file.isEmptyFolder)) {
+                    toggleSelectFile(file.name);
+                  }
+                }}
+              >
+                <div
+                  title={
+                    file.isDirectory
+                      ? `Created: ${new Date(file.created).toLocaleString()}
 Folders: ${file.folderCount}
 Files: ${file.fileCount}`
-                    : `Name: ${file.name}
+                      : `Name: ${file.name}
 Type: ${getFriendlyFileType(file.type, file.isDirectory)}
 Size: ${formatFileSize(file.size)}
 Modified: ${new Date(file.modified).toLocaleString()}`
-                }
-              >
-                {file.name}
-              </div>
+                  }
+                >
+                  {file.name}
+                </div>
 
-              <div>{new Date(file.modified).toLocaleDateString()}</div>
+                <div>{new Date(file.modified).toLocaleDateString()}</div>
 
-              <div>
-                {file.isDirectory
-                  ? file.isEmptyFolder
-                    ? "Empty"
-                    : `${file.folderCount + file.fileCount} items`
-                  : formatFileSize(file.size)}
-              </div>
+                <div>
+                  {file.isDirectory
+                    ? file.isEmptyFolder
+                      ? "Empty"
+                      : `${file.folderCount + file.fileCount} items`
+                    : formatFileSize(file.size)}
+                </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  minWidth: 0,
-                }}
-              >
-                <span className="type-text">
-                  {getFriendlyFileType(file.type, file.isDirectory)}
-                </span>
-                {file.isDirectory && (
-                  <span
-                    className="open-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenFolder(file.name);
-                    }}
-                  >
-                    [Open]
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    minWidth: 0,
+                  }}
+                >
+                  <span className="type-text">
+                    {getFriendlyFileType(file.type, file.isDirectory)}
                   </span>
-                )}
+                  {file.isDirectory && (
+                    <span
+                      className="open-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenFolder(file.name);
+                      }}
+                    >
+                      [Open]
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })
-      )}
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
