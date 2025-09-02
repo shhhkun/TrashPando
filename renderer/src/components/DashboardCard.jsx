@@ -120,7 +120,7 @@ export default function DashboardCard({
     <div
       className="w-full h-full p-4 flex flex-col gap-2"
       style={{
-        backgroundColor: "#ccccccff",
+        backgroundColor: "#F1F1F1",
       }}
     >
       {/* Header */}
@@ -136,7 +136,7 @@ export default function DashboardCard({
       </div>
 
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         className="w-auto"
         onClick={handleToggleExpand}
@@ -145,7 +145,12 @@ export default function DashboardCard({
       </Button>
 
       {/* Total Size */}
-      <div className="text-sm text-gray-400">
+      <div
+        className="text-sm"
+        style={{
+          color: "#4A4A4A",
+        }}
+      >
         {loading
           ? "Calculating..."
           : visibleSize !== null

@@ -4,6 +4,7 @@ import DashboardCard from "./components/DashboardCard";
 import InstalledAppsCard from "./components/InstalledAppsCard";
 import TrashySidebar from "./components/TrashySidebar"; // tsx
 import { Badge } from "./components/ui/badge";
+import logo from "./assets/trashulogo2.png"; // logo image
 
 const darkGrey = "rgb(34, 34, 34)";
 const lightText = "rgba(230, 230, 230, 1)";
@@ -144,12 +145,17 @@ function App() {
           style={{ backgroundColor: "#F1F1F1" }}
         >
           <div className="text-center">
-            <div
-              className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
-              style={{ backgroundColor: "#3A5F3B" }}
-            >
-              <span className="text-4xl">🦝</span>
-            </div>
+            {/* Updated Logo Integration */}
+            <img
+              src={logo}
+              alt="Trashu Logo"
+              className="mx-auto"
+              style={{
+                width: "128px", // Corresponds to w-24
+                height: "128px", // Corresponds to h-24
+              }}
+            />
+
             <h3
               className="text-xl font-medium mb-2"
               style={{ color: "#2B2B2B" }} // primary font clr

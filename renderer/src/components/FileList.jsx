@@ -109,17 +109,9 @@ export default function FileList({
           ))}
         </select>
 
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setFolderPath(folderPath)}
-        >
-          Refresh Size
-        </Button>
-
         {/* Ascending/Descending Toggle */}
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={() =>
             setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
