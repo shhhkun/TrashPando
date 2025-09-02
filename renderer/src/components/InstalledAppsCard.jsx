@@ -4,6 +4,7 @@ import {
   setAppIconInCache,
   invalidateAppIconCache,
 } from "../cache";
+import { Button } from "./ui/button";
 
 const darkGrey = "rgb(34, 34, 34)";
 const lightText = "rgba(230, 230, 230, 1)";
@@ -100,7 +101,10 @@ export default function InstalledAppsCard() {
   };
 
   return (
-    <div style={{ padding: "16px", color: lightText }}>
+    <div
+      className="w-full h-full overflow-y-auto"
+      style={{ backgroundColor: "#F1F1F1", padding: "16px", color: "#616161" }}
+    >
       {/* Controls */}
       <div style={{ marginBottom: "12px", display: "flex", gap: "12px" }}>
         <input
@@ -112,8 +116,9 @@ export default function InstalledAppsCard() {
             flex: 1,
             padding: "6px 10px",
             border: "none",
-            background: darkGrey,
-            color: lightText,
+            borderRadius: "18px",
+            background: "#e0e0e0ff",
+            color: "#616161",
           }}
         />
         <select
@@ -122,8 +127,9 @@ export default function InstalledAppsCard() {
           style={{
             padding: "6px 14px",
             border: "none",
-            background: darkGrey,
-            color: lightText,
+            borderRadius: "18px",
+            background: "#e0e0e0ff",
+            color: "#616161",
           }}
         >
           <option value="name">Name</option>
@@ -144,7 +150,8 @@ export default function InstalledAppsCard() {
           <div
             key={`${app.iconPath || app.name}-${idx}`}
             style={{
-              background: darkGrey,
+              background: "#e0e0e0ff",
+              borderRadius: "18px",
               padding: "10px",
               display: "flex",
               flexDirection: "column",
@@ -171,20 +178,15 @@ export default function InstalledAppsCard() {
             {app.installDate && (
               <span style={{ fontSize: "12px" }}>{app.installDate}</span>
             )}
-            <button
+            <Button
+              variant="outline"
               onClick={() => uninstallApp(app)}
               style={{
-                marginTop: "8px",
-                padding: "4px 8px",
-                fontSize: "12px",
-                border: "none",
-                background: "rgba(49, 49, 49, 1)",
-                color: lightText,
                 cursor: "pointer",
               }}
             >
               Uninstall
-            </button>
+            </Button>
           </div>
         ))}
       </div>
