@@ -19,6 +19,7 @@ import {
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
+import logo from "../assets/trashulogo.png";
 
 interface TrashySidebarProps {
   activeItem: string | null;
@@ -252,7 +253,7 @@ const TrashySidebar: React.FC<TrashySidebarProps> = ({
         <div className="mb-6 flex items-center justify-center">
           <div
             className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg"
-            style={{ backgroundColor: "#3A5F3B" }}
+            style={{ backgroundColor: "#F1F1F1" }}
           >
             <Button
               title="Home Screen"
@@ -262,7 +263,11 @@ const TrashySidebar: React.FC<TrashySidebarProps> = ({
               className="text-lg w-10 h-10 p-0 rounded-lg transition-all duration-200 hover:shadow-sm"
               style={{ color: "#F1F1F1" }}
             >
-              🦝
+              <img
+                src={logo}
+                alt="Trashu Logo"
+                className="w-full h-full"
+              />
             </Button>
           </div>
         </div>
