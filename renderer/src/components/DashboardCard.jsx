@@ -135,14 +135,16 @@ export default function DashboardCard({
         </h2>
       </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-auto"
-        onClick={handleToggleExpand}
-      >
-        {expanded ? "Collapse" : "View"}
-      </Button>
+      <div className="flex">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-auto"
+          onClick={handleToggleExpand}
+        >
+          {expanded ? "Collapse" : "View"}
+        </Button>
+      </div>
 
       {/* Total Size */}
       <div

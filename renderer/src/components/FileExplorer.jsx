@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import FileSelector from "./FileSelector";
 import FileList from "./FileList";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
@@ -24,64 +24,26 @@ export default function FileExplorer({
 }) {
   const fileListRef = useRef(null);
 
-  const [sortField, setSortField] = useState("name");
-  const [sortOrder, setSortOrder] = useState("asc");
-
-  const sortOptions = [
-    { label: "Name", value: "name" },
-    { label: "Date Modified", value: "dateModified" },
-    { label: "Date Created", value: "dateCreated" },
-    { label: "Size", value: "size" },
-    { label: "Type", value: "type" },
-    { label: "Item Count", value: "itemCount" },
-  ];
-
   return (
-    <div className="flex flex-col p-4 gap-4">
-      {/* Select Folder and Delete Buttons */}
+    <div
+      className="w-full h-full p-4 flex flex-col gap-4"
+      style={{
+        backgroundColor: "#F1F1F1",
+      }}
+    >
       <div className="flex gap-2">
-
-        <Button className="no-drag" onClick={handleSelectFolder}>
+        {/* Select Folder Button */}
+        <Button
+          variant="outline"
+          className="no-drag"
+          onClick={handleSelectFolder}
+        >
           Select Folder
-        </Button>
-
-        <Button
-          variant="destructive"
-          className="no-drag"
-          onClick={() => {
-            setFilesToDelete(Array.from(selectedFiles));
-            setShowConfirm(true);
-          }}
-          disabled={selectedFiles.size === 0}
-        >
-          Delete Selected
-        </Button>
-
-        {/* Sort Dropdown */}
-        <select
-          className="no-drag border rounded px-3 py-1 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={sortField}
-          onChange={(e) => setSortField(e.target.value)}
-        >
-          {sortOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        {/* Ascending/Descending Toggle */}
-        <Button
-          className="no-drag"
-          onClick={() =>
-            setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
-          }
-        >
-          {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
         </Button>
 
         {/* Duplicate Scanner Test */}
         <Button
+          variant="outline"
           className="no-drag"
           onClick={async () => {
             if (!folderPath) return;
@@ -117,48 +79,51 @@ export default function FileExplorer({
         >
           Test Duplicate Scan
         </Button>
+
+        {/* Registry Scanner Test */}
+        <Button
+          variant="outline"
+          className="no-drag"
+          onClick={async () => {
+            try {
+              console.log("Scanning installed apps (registry)...");
+              const apps = await window.electronAPI.scanInstalledAppsRegistry();
+
+              // Sort apps A → Z by display name
+              apps.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+              let output = "Installed Apps (Registry):\n\n";
+
+              apps.forEach((app, index) => {
+                output += `${index + 1}. ${app.name || "Unknown"}\n`;
+                if (app.uninstallString)
+                  output += `   Uninstall: ${app.uninstallString}\n`;
+                if (app.size)
+                  output += `   Size: ${(app.size / 1024).toFixed(2)} KB\n`;
+                if (app.iconPath) output += `   Icon: ${app.iconPath}\n`;
+                if (app.publisher) output += `   Publisher: ${app.publisher}\n`;
+                if (app.version) output += `   Version: ${app.version}\n`;
+                output += "\n";
+              });
+
+              const outputFilePath = await window.electronAPI.writeFile(
+                "output2.txt",
+                output
+              );
+              console.log("Registry scan results written to:", outputFilePath);
+            } catch (err) {
+              console.error("Registry scan error:", err);
+            }
+          }}
+        >
+          Test Registry Installed Scan
+        </Button>
       </div>
 
-      {/* Registry Scanner Test */}
-      <Button
-        className="no-drag"
-        onClick={async () => {
-          try {
-            console.log("Scanning installed apps (registry)...");
-            const apps = await window.electronAPI.scanInstalledAppsRegistry();
-
-            // Sort apps A → Z by display name
-            apps.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-            let output = "Installed Apps (Registry):\n\n";
-
-            apps.forEach((app, index) => {
-              output += `${index + 1}. ${app.name || "Unknown"}\n`;
-              if (app.uninstallString)
-                output += `   Uninstall: ${app.uninstallString}\n`;
-              if (app.size)
-                output += `   Size: ${(app.size / 1024).toFixed(2)} KB\n`;
-              if (app.iconPath) output += `   Icon: ${app.iconPath}\n`;
-              if (app.publisher) output += `   Publisher: ${app.publisher}\n`;
-              if (app.version) output += `   Version: ${app.version}\n`;
-              output += "\n";
-            });
-
-            const outputFilePath = await window.electronAPI.writeFile(
-              "output2.txt",
-              output
-            );
-            console.log("Registry scan results written to:", outputFilePath);
-          } catch (err) {
-            console.error("Registry scan error:", err);
-          }
-        }}
-      >
-        Test Registry Installed Scan
-      </Button>
-
       {/* Folder Path Display */}
-      <div className="italic">{folderPath || "No folder selected"}</div>
+      <div style={{ color: "#2b2b2b" }}>
+        {folderPath || "No folder selected"}
+      </div>
 
       {/* Folder Contents Render */}
       <div id="file-list-wrapper" className="flex-1 overflow-auto">
@@ -186,8 +151,8 @@ export default function FileExplorer({
                 setFiles(scannedFiles);
                 setSelectedFiles(new Set());
               }}
-              sortField={sortField}
-              sortOrder={sortOrder}
+              setFilesToDelete={setFilesToDelete}
+              setShowConfirm={setShowConfirm}
             />
           )}
           onSelectionChange={(newSelection) =>
