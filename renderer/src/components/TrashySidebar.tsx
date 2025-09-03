@@ -20,13 +20,16 @@ import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
 import logo from "../assets/trashulogo.png";
+import BambooStorageBar from "./BambooStorageBar";
 
 interface TrashySidebarProps {
-  activeItem: string | null;
+  //activeItem: string | null;
   setActiveItem: (item: string | null) => void;
-  folderPath: string;
+  //folderPath: string;
   setFolderPath: (path: string) => void;
   commonFolders: Record<string, string>;
+  used: number;
+  total: number;
 }
 
 const TrashySidebar: React.FC<TrashySidebarProps> = ({
@@ -35,6 +38,8 @@ const TrashySidebar: React.FC<TrashySidebarProps> = ({
   //folderPath,
   setFolderPath,
   commonFolders,
+  used,
+  total,
 }) => {
   const [expandedSections, setExpandedSections] = useState({
     dashboard: true,
@@ -77,53 +82,69 @@ const TrashySidebar: React.FC<TrashySidebarProps> = ({
     switch (activePanel) {
       case "dashboard":
         return (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between px-3 py-2">
-              <h3 className="text-sm font-medium" style={{ color: "#F1F1F1" }}>
-                Quick Access
-              </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleSection("dashboard")}
-                className="h-5 w-5 p-0"
-                style={{ color: "#F1F1F1", opacity: "0.7" }}
-              >
-                {expandedSections.dashboard ? (
-                  <ChevronDown size={12} />
-                ) : (
-                  <ChevronRight size={12} />
-                )}
-              </Button>
-            </div>
-            {expandedSections.dashboard && (
-              <div className="space-y-1">
-                {dashboardItems.map((item, index) => (
-                  <Button
-                    key={index}
-                    variant="ghost"
-                    className="w-full justify-start gap-3 px-3 py-2 h-auto transition-all duration-200"
-                    style={{ color: "#F1F1F1" }}
-                    onClick={() => {
-                      if (item.label === "Installed Apps") {
-                        setActiveItem("apps");
-                      } else {
-                        const folderKey = item.label.toLowerCase();
-                        const folder = commonFolders[folderKey];
-                        setActiveItem(folderKey);
-                        if (folder) setFolderPath(folder);
-                      }
-                    }}
-                  >
-                    <item.icon
-                      size={16}
-                      style={{ color: "#F1F1F1", opacity: "0.7" }}
-                    />
-                    <span className="text-sm">{item.label}</span>
-                  </Button>
-                ))}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-3 py-2">
+                <h3
+                  className="text-sm font-medium"
+                  style={{ color: "#F1F1F1" }}
+                >
+                  Quick Access
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleSection("dashboard")}
+                  className="h-5 w-5 p-0"
+                  style={{ color: "#F1F1F1", opacity: "0.7" }}
+                >
+                  {expandedSections.dashboard ? (
+                    <ChevronDown size={12} />
+                  ) : (
+                    <ChevronRight size={12} />
+                  )}
+                </Button>
               </div>
-            )}
+              {expandedSections.dashboard && (
+                <div className="space-y-1">
+                  {dashboardItems.map((item, index) => (
+                    <Button
+                      key={index}
+                      variant="ghost"
+                      className="w-full justify-start gap-3 px-3 py-2 h-auto transition-all duration-200"
+                      style={{ color: "#F1F1F1" }}
+                      onClick={() => {
+                        if (item.label === "Installed Apps") {
+                          setActiveItem("apps");
+                        } else {
+                          const folderKey = item.label.toLowerCase();
+                          const folder = commonFolders[folderKey];
+                          setActiveItem(folderKey);
+                          if (folder) setFolderPath(folder);
+                        }
+                      }}
+                    >
+                      <item.icon
+                        size={16}
+                        style={{ color: "#F1F1F1", opacity: "0.7" }}
+                      />
+                      <span className="text-sm">{item.label}</span>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Bamboo Storage Health Bar */}
+            <div
+              className="mx-3 p-3 rounded-lg"
+              style={{
+                backgroundColor: "rgba(241, 241, 241, 0.05)",
+                border: "1px solid rgba(241, 241, 241, 0.1)",
+              }}
+            >
+              <BambooStorageBar used={used} total={total} />
+            </div>
           </div>
         );
 
@@ -263,11 +284,7 @@ const TrashySidebar: React.FC<TrashySidebarProps> = ({
               className="text-lg w-10 h-10 p-0 rounded-lg transition-all duration-200 hover:shadow-sm"
               style={{ color: "#F1F1F1" }}
             >
-              <img
-                src={logo}
-                alt="Trashu Logo"
-                className="w-full h-full"
-              />
+              <img src={logo} alt="Trashu Logo" className="w-full h-full" />
             </Button>
           </div>
         </div>

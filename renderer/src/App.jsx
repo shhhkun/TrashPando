@@ -9,8 +9,25 @@ import logo from "./assets/trashulogo2.png"; // logo image
 const darkGrey = "rgb(34, 34, 34)";
 const lightText = "rgba(230, 230, 230, 1)";
 
+function DiskUsageDiv() {
+  const [diskUsage, setDiskUsage] = useState({ used: 0, total: 0 });
+
+  useEffect(() => {
+    // check for the electronAPI before calling to prevent errors
+    if (window.electronAPI && window.electronAPI.getDiskUsage) {
+      window.electronAPI.getDiskUsage().then((result) => {
+        setDiskUsage(result);
+      }).catch(error => {
+        console.error("Failed to get disk usage:", error);
+      });
+    }
+  }, []);
+
+  return diskUsage;
+}
+
 function App() {
-  const [activeTab, setActiveTab] = useState("pictures"); // default: home
+  const [activeTab, setActiveTab] = useState("files"); // default: home
 
   const [folderPath, setFolderPath] = useState(null);
   const [pathSeparator, setPathSeparator] = useState("/");
@@ -23,6 +40,8 @@ function App() {
   const [toastMsg, setToastMsg] = useState(null);
   const [toastType, setToastType] = useState("info");
   const [filesToDelete, setFilesToDelete] = useState([]);
+
+  const { used, total } = DiskUsageDiv();
 
   // fetch common folders dynamically
   useEffect(() => {
@@ -136,6 +155,8 @@ function App() {
         //folderPath={folderPath}
         setFolderPath={setFolderPath}
         commonFolders={commonFolders}
+        used={used}
+        total={total}
       />
 
       {/* Home Screen */}
