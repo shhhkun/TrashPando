@@ -99,7 +99,9 @@ _Detailed instructions coming as features are implemented_
 
 - UI Overhaul
   - Used Figma to test out layout & color palettes
-  - Creating app specific icon/logo
+  - New app specific icon/logo
+  - New assets
+  - Brighter/lighter theme for main content panel
 - Optimize OS scanning
   - Check worker thread compatibility
   - Improve caching/fetching
@@ -131,6 +133,9 @@ _Detailed instructions coming as features are implemented_
     - Sidebar panel
     - Main content panels
     - App specific logos
+    - More custom assets (fill bar, leaves, etc.)
+    - Custom animations for actions (delete/scans)
+    - Toggle theme/switch for "panda-mode" (fancy theme toggle for color switch & new assets)
     - Inclusion of future menus (settings, user profile, etc.)
 
 - [ ] Dashboard Implementation:

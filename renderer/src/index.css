@@ -2601,7 +2601,7 @@
 
   @media (hover: hover) {
     .hover\:bg-accent:hover {
-      background-color: var(--accent);
+      background-color: #5a5a5a;
     }
   }
 

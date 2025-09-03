@@ -307,7 +307,7 @@ const TrashySidebar: React.FC<TrashySidebarProps> = ({
               }`}
               style={{
                 backgroundColor:
-                  activePanel === item.id ? "#3A5F3B" : "transparent",
+                  activePanel === item.id ? "#3A5F3B" : undefined,
                 color: "#F1F1F1",
               }}
               title={item.label}
