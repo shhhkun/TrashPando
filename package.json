@@ -16,6 +16,7 @@
     "wait-on": "^8.0.4"
   },
   "dependencies": {
+    "check-disk-space": "^3.4.0",
     "get-installed-apps": "^1.1.1",
     "icon-extractor": "^1.0.3",
     "icon-extractor-win": "^1.0.0",

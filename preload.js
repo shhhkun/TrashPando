@@ -31,4 +31,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("scan-installed-apps-registry"),
 
   getAppIcon: (iconPath) => ipcRenderer.invoke("get-app-icon", iconPath),
+
+  getDiskUsage: () => ipcRenderer.invoke("get-disk-usage"),
 });

@@ -19,6 +19,8 @@ const { scanInstalledAppsRegistry } = require("./registryScanner.js");
 
 const { execFile } = require("child_process");
 
+const checkDiskSpace = require("check-disk-space").default;
+
 // function extractIconFromExe(filePath) {
 //   return new Promise((resolve, reject) => {
 //     const outPath = path.join(
@@ -73,7 +75,12 @@ function extractIconFromExe(filePathWithIndex) {
       `${path.basename(filePath)}_${index}.png`
     );
 
-    console.log("[extractIconFromExe] Attempting extraction for:", filePath, "Index:", index);
+    console.log(
+      "[extractIconFromExe] Attempting extraction for:",
+      filePath,
+      "Index:",
+      index
+    );
 
     const psCommand = `
       Add-Type -AssemblyName System.Drawing;
@@ -91,7 +98,11 @@ function extractIconFromExe(filePathWithIndex) {
       { windowsHide: true },
       (err, stdout, stderr) => {
         if (err) {
-          console.error("[extractIconFromExe] Failed for:", filePath, stderr || err);
+          console.error(
+            "[extractIconFromExe] Failed for:",
+            filePath,
+            stderr || err
+          );
           return reject(err);
         }
 
@@ -115,7 +126,7 @@ function createWindow() {
       contextIsolation: true, // secure
       nodeIntegration: false, // Let preload access node APIs
     },
-    autoHideMenuBar: true,
+    //autoHideMenuBar: true,
   });
 
   if (isDev) {
@@ -277,6 +288,22 @@ ipcMain.handle("get-app-icon", async (event, iconPath) => {
     return null;
   } catch (err) {
     console.error("Failed to get icon:", err);
+    return null;
+  }
+});
+
+ipcMain.handle("get-disk-usage", async () => {
+  try {
+    const drivePath = process.platform === "win32" ? "C:/" : "/";
+    const { size, free } = await checkDiskSpace(drivePath);
+
+    return {
+      total: size,
+      used: size - free,
+      free,
+    };
+  } catch (err) {
+    console.error("Disk usage error:", err);
     return null;
   }
 });
