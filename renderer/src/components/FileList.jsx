@@ -93,10 +93,17 @@ export default function FileList({
           }}
           disabled={selectedFiles.size === 0}
         >
-          Delete Selected
+          🐾 Delete Selected
         </Button>
 
         {/* Sort Dropdown */}
+        <div
+          style={{
+            color: "#616161",
+          }}
+        >
+          Sort By
+        </div>
         <select
           className="border rounded px-3 py-1 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={sortField}

@@ -126,20 +126,20 @@ export default function DashboardCard({
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2
-          className="text-lg font-semibold"
+          className="font-semibold px-6"
           style={{
             color: "#2B2B2B",
+            fontSize: "1.5rem"
           }}
         >
           {title}
         </h2>
       </div>
 
-      <div className="flex">
+      <div className="flex px-6">
         <Button
           variant="outline"
           size="sm"
-          className="w-auto"
           onClick={handleToggleExpand}
         >
           {expanded ? "Collapse" : "View"}
@@ -148,7 +148,7 @@ export default function DashboardCard({
 
       {/* Total Size */}
       <div
-        className="text-sm"
+        className="text-sm px-6"
         style={{
           color: "#4A4A4A",
         }}
@@ -164,7 +164,7 @@ export default function DashboardCard({
 
       {/* FileList */}
       {expanded && !loading && (
-        <div className="flex-1 mt-2">
+        <div className="flex-1 mt-2 px-6">
           <FileSelector
             containerRef={cardFileListRef}
             items={files}

@@ -31,7 +31,7 @@ export default function FileExplorer({
         backgroundColor: "#F1F1F1",
       }}
     >
-      <div className="flex gap-2">
+      <div className="flex gap-2 px-6">
         {/* Select Folder Button */}
         <Button
           variant="outline"
@@ -121,12 +121,12 @@ export default function FileExplorer({
       </div>
 
       {/* Folder Path Display */}
-      <div style={{ color: "#2b2b2b" }}>
+      <div className="px-6" style={{ color: "#2b2b2b" }}>
         {folderPath || "No folder selected"}
       </div>
 
       {/* Folder Contents Render */}
-      <div id="file-list-wrapper" className="flex-1 overflow-auto">
+      <div id="file-list-wrapper" className="flex-1 px-6">
         <FileSelector
           containerRef={fileListRef}
           items={files}
