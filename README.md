@@ -106,6 +106,8 @@ _Detailed instructions coming as features are implemented_
   - Check worker thread compatibility
   - Improve caching/fetching
   - Move cache to lightweight database (SQLite)
+- Reworked opening folder to be via double clicks instead of a right-aligned open button
+- Added dynamic header for current opened folder to allow back & forth navigation
 
 ### **v?.? - Later Development**
 
@@ -185,19 +187,19 @@ _Detailed instructions coming as features are implemented_
 
 ## Known Issues
 
-- [ ] Path separator fetching is a bit unoptimized, check/look into preload.js loading properly as to use electronAPI calls rather than state & useEffect
-- [ ] Common folders scan is somewhat restricted/limited by how its defined in main.js, possibly allow user to add their own preference of common folders
+- [x] Path separator fetching is a bit unoptimized, check/look into preload.js loading properly as to use electronAPI calls rather than state & useEffect
+- [x] Inconsistent file selecting and odd file selection persistence
+  - Was due to autoScroll handler (currently commented out to be reimplmented later)
+  - Implemented a global onMouseDown handler, to handle out of div selects
+- [ ] File Explorer navigation (common folders scan) is restricted/limited by how its defined in main.js, implement functionality to add common paths in the side bar menu
 - [ ] File selecting whilst scrolling
   - Not using React Selecto anymore
   - Using component for selecting logic to more easily implement and debug autoscroll, 'ctrl +', and selection persistence
   - Selection is more dynamic, recomputing each frame
   - Likely issue is how the drag selection box behaves on scroll, it should dynamically increase or decrease its height based on scroll movement to ensure the same intersections exist for files to overlap with
-- [x] Inconsistent file selecting and odd file selection persistence
-  - Was due to autoScroll handler (currently commented out to be reimplmented later)
-  - Implemented a global onMouseDown handler, to handle out of div selects
 - [ ] 'Ctrl +' behavior:
   - Holding 'Ctrl +' prevents dynamic drag select/deselect
-- [ ] Installed apps scanning hitrate)
+- [ ] Installed apps scanning hitrate
   - Could look into potential other folders like ones for Xbox Desktop or Microsoft Apps
   - Icon scanning still limited, indexing likely bugged for .exe/.dll's
 
