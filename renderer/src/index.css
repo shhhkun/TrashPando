@@ -1531,6 +1531,10 @@
     background-color: var(--accent);
   }
 
+  .bg-accent2 {
+    background-color: var(--accent2);
+  }
+
   .bg-background {
     background-color: var(--background);
   }
@@ -2602,6 +2606,12 @@
   @media (hover: hover) {
     .hover\:bg-accent:hover {
       background-color: #5a5a5a;
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-accent2:hover {
+      background-color: var(--accent2);
     }
   }
 
@@ -4454,6 +4464,7 @@
   --muted-foreground: #717182;
 
   --accent: #3a5f3b;
+  --accent2: #e0e0e0;
   --accent-foreground: #030213;
 
   --destructive: #d4183d;

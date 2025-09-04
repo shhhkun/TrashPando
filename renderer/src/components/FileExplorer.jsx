@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import FileSelector from "./FileSelector";
 import FileList from "./FileList";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
@@ -23,6 +23,37 @@ export default function FileExplorer({
   confirmDelete,
 }) {
   const fileListRef = useRef(null);
+  const [initialPathSegments, setInitialPathSegments] = useState(null);
+
+  useEffect(() => {
+    if (initialPathSegments === null && folderPath) {
+      setInitialPathSegments(folderPath.split(/[\\/]/).filter(Boolean));
+    }
+  }, [folderPath, initialPathSegments]);
+
+  // split folderPath into an array for breadcrumb navigation
+  const pathSegments = useMemo(() => {
+    if (!folderPath) return [];
+    // handle both Windows and Unix path separators
+    return folderPath.split(/[\\/]/).filter(Boolean);
+  }, [folderPath]);
+
+  const handleBreadcrumbClick = async (index) => {
+    const newPathSegments = pathSegments.slice(0, index + 1);
+    const newPath =
+      (newPathSegments[0].endsWith(":") ? "" : pathSeparator) +
+      newPathSegments.join(pathSeparator);
+
+    setFolderPath(newPath);
+
+    try {
+      const scannedFiles = await window.electronAPI.scanFolder(newPath);
+      setFiles(scannedFiles);
+      setSelectedFiles(new Set());
+    } catch (err) {
+      console.error("Error navigating back:", err);
+    }
+  };
 
   return (
     <div
@@ -31,6 +62,37 @@ export default function FileExplorer({
         backgroundColor: "#F1F1F1",
       }}
     >
+      <div className="flex flex-col px-6 pb-2">
+        <div className="flex items-center space-x-2 overflow-x-auto whitespace-nowrap">
+          {pathSegments.map((segment, index) => {
+            const rootIndex = initialPathSegments
+              ? initialPathSegments.length - 1
+              : 0;
+            if (index < rootIndex) {
+              return null;
+            }
+
+            return (
+              <span key={index} className="flex items-center">
+                <Button
+                  variant="ghost2"
+                  className="px-2 py-1 text-xl font-semibold"
+                  style={{ color: "#2B2B2B" }}
+                  onClick={() => handleBreadcrumbClick(index)}
+                >
+                  {segment}
+                </Button>
+                {index < pathSegments.length - 1 && (
+                  <span style={{ color: "#2B2B2B", fontSize: "1.25rem" }}>
+                    &gt;
+                  </span>
+                )}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex gap-2 px-6">
         {/* Select Folder Button */}
         <Button

@@ -6,9 +6,6 @@ import TrashySidebar from "./components/TrashySidebar"; // tsx
 import { Badge } from "./components/ui/badge";
 import logo from "./assets/trashulogo2.png"; // logo image
 
-const darkGrey = "rgb(34, 34, 34)";
-const lightText = "rgba(230, 230, 230, 1)";
-
 function DiskUsageDiv() {
   const [diskUsage, setDiskUsage] = useState({ used: 0, total: 0 });
 
@@ -144,8 +141,6 @@ function App() {
       style={{
         height: "100vh",
         width: "100vw",
-        backgroundColor: darkGrey,
-        color: lightText,
       }}
     >
       {/* Sidebar */}
