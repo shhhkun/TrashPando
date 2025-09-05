@@ -192,10 +192,20 @@ export default function FileExplorer({
             <FileList
               files={items}
               selectedFiles={selectedIds}
-              toggleSelectFile={(fileName) => {
-                const item = files.find((f) => f.name === fileName);
-                if (!item || (item.isDirectory && !item.isEmptyFolder)) return;
-              }}
+              // toggleSelectFile={(fileName) => {
+              //   const item = files.find((f) => f.name === fileName);
+              //   if (!item || (item.isDirectory && !item.isEmptyFolder)) return;
+
+              //   setSelectedFiles((prev) => {
+              //     const newSet = new Set(prev);
+              //     if (newSet.has(fileName)) {
+              //       newSet.delete(fileName);
+              //     } else {
+              //       newSet.add(fileName);
+              //     }
+              //     return newSet;
+              //   });
+              // }}
               listRef={fileListRef}
               onOpenFolder={async (folderName) => {
                 const newPath = folderPath.endsWith(pathSeparator)

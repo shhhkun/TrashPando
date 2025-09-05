@@ -86,10 +86,28 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     // Ctrl + drag should append to existing selection, normal drag replaces
     const next = new Set(dragStartSelectionRef.current);
 
-    frameIntersections.forEach((id) => next.add(id));
+    //frameIntersections.forEach((id) => next.add(id));
 
-    onSelectionChange(next);
-  }, [startPos, currentPos]);
+    //onSelectionChange(next);
+
+    frameIntersections.forEach((id) => {
+      if (dragStartSelectionRef.current.has(id)) {
+        // if the item was already in the initial selection, remove it
+        next.delete(id);
+      } else {
+        // if not, add it
+        next.add(id);
+      }
+    });
+
+    if (!isCtrlKey) {
+      // for non-Ctrl drag, just select the items in the box
+      onSelectionChange(frameIntersections);
+    } else {
+      // for Ctrl drag, apply the toggle logic to the initial selection
+      onSelectionChange(next);
+    }
+  }, [isCtrlKey, startPos, currentPos, onSelectionChange, items, selectedIds]);
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
@@ -114,7 +132,15 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
         return; // ignore non-empty folders
       }
 
-      onSelectionChange(new Set([itemId]));
+      // if already selected, removed it
+      if (selectedIds.has(itemId)) {
+        const newSelection = new Set(selectedIds);
+        newSelection.delete(itemId);
+        onSelectionChange(newSelection);
+      } else {
+        // not yet selected, then select
+        onSelectionChange(new Set([itemId]));
+      }
       return;
     }
 
