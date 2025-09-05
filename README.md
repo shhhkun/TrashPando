@@ -109,6 +109,9 @@ _Detailed instructions coming as features are implemented_
 - Reworked opening folder to be via double clicks instead of a right-aligned open button
 - Added dynamic header for current opened folder to allow back & forth navigation
 
+- Sidebar or other collapsable menu for infographic UI (Pi charts, stacked bars) of storage breakdowns
+- Duplicate scanner UI ideas: grouped list view, dual-panel view, or tree/hierarchy view
+
 ### **v?.? - Later Development**
 
 - Advanced metrics?
@@ -123,11 +126,11 @@ _Detailed instructions coming as features are implemented_
 ## Roadmap
 
 - [x] Implement basic file scanning and metadata collection
-- [ ] File previews and sorting/filtering options
+- [x] File previews and sorting/filtering options
 - [ ] Undo button for last delete action/safety net
   - Trashing/recycling (depends on OS) items rather than permanent delete currently
   - Will later make it togglable in settings for power users
-- [ ] Duplicate detection & improve metadata collection
+- [x] Duplicate detection & improve metadata collection
 - [ ] Smart metrics integration (last access time, usage frequency)
 
 - [ ] Panda themed UI overhaul:
@@ -172,7 +175,7 @@ _Detailed instructions coming as features are implemented_
     - Obtaining registry keys
       - Optional, but would still require heuristic filtering to avoid getting unwanted .exe's
 
-- [ ] Caching:
+- [x] Caching:
 
   - Avoid rescanning folders for file/folder size or other metrics if no changes are made on initial load
   - Watch for folder changes with fs.watch
@@ -191,7 +194,7 @@ _Detailed instructions coming as features are implemented_
 - [x] Inconsistent file selecting and odd file selection persistence
   - Was due to autoScroll handler (currently commented out to be reimplmented later)
   - Implemented a global onMouseDown handler, to handle out of div selects
-- [ ] File Explorer navigation (common folders scan) is restricted/limited by how its defined in main.js, implement functionality to add common paths in the side bar menu
+- [x] File Explorer navigation (common folders scan) is restricted/limited by how its defined in main.js, implement functionality to add common paths in the side bar menu
 - [ ] File selecting whilst scrolling
   - Not using React Selecto anymore
   - Using component for selecting logic to more easily implement and debug autoscroll, 'ctrl +', and selection persistence
