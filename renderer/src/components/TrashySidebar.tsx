@@ -41,7 +41,9 @@ const TrashySidebar: React.FC<TrashySidebarProps> = ({
   used,
   total,
 }) => {
-  const [expandedSections, setExpandedSections] = useState({
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({
     dashboard: true,
     explorer: true,
   });
