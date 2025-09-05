@@ -158,6 +158,11 @@ export default function FileList({
                     toggleSelectFile(file.name);
                   }
                 }}
+                onDoubleClick={() => {
+                  if (file.isDirectory) {
+                    onOpenFolder(file.name);
+                  }
+                }}
               >
                 <div
                   title={
@@ -195,17 +200,6 @@ Modified: ${new Date(file.modified).toLocaleString()}`
                   <span className="type-text">
                     {getFriendlyFileType(file.type, file.isDirectory)}
                   </span>
-                  {file.isDirectory && (
-                    <span
-                      className="open-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOpenFolder(file.name);
-                      }}
-                    >
-                      [Open]
-                    </span>
-                  )}
                 </div>
               </div>
             );

@@ -1,7 +1,6 @@
 :root {
   --pandaGreen: rgb(76, 175, 80);
   --darkGrey: rgb(34, 34, 34);
-  --hoverDarkGrey: rgb(54, 54, 54);
   --lightText: rgba(230, 230, 230, 1);
   --bg: #f1f1f1;
   --primary: #2b2b2b;
@@ -9,7 +8,7 @@
   --main-content-bg: #ffffff;
   --header-text-color: #616161;
   --divider-color: #e0e0e0;
-  --row-hover-bg: #f5f5f5;
+  --row-hover-bg: #e0e0e0;
   --selected-bg: rgba(76, 175, 80, 0.1);
   --even-row-bg: #fafafa;
   --disabled-indicator-color: #ef5350; /* clear, soft red */
@@ -122,12 +121,4 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.file-item .open-btn {
-  justify-self: end;
-  padding-left: 8px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  color: var(--pandaGreen);
 }
