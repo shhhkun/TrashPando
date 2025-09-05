@@ -182,11 +182,6 @@ export default function FileExplorer({
         </Button>
       </div>
 
-      {/* Folder Path Display */}
-      <div className="px-6" style={{ color: "#2b2b2b" }}>
-        {folderPath || "No folder selected"}
-      </div>
-
       {/* Folder Contents Render */}
       <div id="file-list-wrapper" className="flex-1 px-6">
         <FileSelector

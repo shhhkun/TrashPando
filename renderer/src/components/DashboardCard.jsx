@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import FileSelector from "./FileSelector";
 import FileList from "./FileList";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
@@ -31,6 +31,37 @@ export default function DashboardCard({
   const [visibleSize, setVisibleSize] = useState(null);
   const [hiddenSize, setHiddenSize] = useState(null);
   const cardFileListRef = useRef(null);
+  const [initialPathSegments, setInitialPathSegments] = useState(null);
+
+  // split folderPath into an array for breadcrumb navigation
+  const pathSegments = useMemo(() => {
+    if (!folderPath) return [];
+    // handle both Windows and Unix path separators
+    return folderPath.split(/[\\/]/).filter(Boolean);
+  }, [folderPath]);
+
+  const handleBreadcrumbClick = async (index) => {
+    const newPathSegments = pathSegments.slice(0, index + 1);
+    const newPath =
+      (newPathSegments[0].endsWith(":") ? "" : pathSeparator) +
+      newPathSegments.join(pathSeparator);
+
+    setFolderPath(newPath);
+
+    try {
+      const scannedFiles = await window.electronAPI.scanFolder(newPath);
+      setFiles(scannedFiles);
+      setSelectedFiles(new Set());
+    } catch (err) {
+      console.error("Error navigating back:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (initialPathSegments === null && folderPath) {
+      setInitialPathSegments(folderPath.split(/[\\/]/).filter(Boolean));
+    }
+  }, [folderPath, initialPathSegments]);
 
   useEffect(() => {
     if (!folderPath) return;
@@ -62,15 +93,17 @@ export default function DashboardCard({
         if (cached) {
           setVisibleSize(cached.visibleSize);
           setHiddenSize(cached.hiddenSize);
-          //setFiles(cached.files || []);
         } else {
+          // reset values to avoid wrong data being shown
+          setVisibleSize(null);
+          setHiddenSize(null);
+
           const result = await window.electronAPI.scanRecursive(folderPath);
           if (!isMounted) return;
 
           setVisibleSize(result.visibleSize);
           setHiddenSize(result.hiddenSize);
           setInCache(folderPath, {
-            //files: result.items,
             visibleSize: result.visibleSize,
             hiddenSize: result.hiddenSize,
           });
@@ -124,24 +157,39 @@ export default function DashboardCard({
       }}
     >
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2
-          className="font-semibold px-6"
-          style={{
-            color: "#2B2B2B",
-            fontSize: "1.5rem"
-          }}
-        >
-          {title}
-        </h2>
+      <div className="flex flex-col px-6 pb-2">
+        <div className="flex items-center space-x-2 overflow-x-auto whitespace-nowrap">
+          {pathSegments.map((segment, index) => {
+            const rootIndex = initialPathSegments
+              ? initialPathSegments.length - 1
+              : 0;
+            if (index < rootIndex) {
+              return null;
+            }
+
+            return (
+              <span key={index} className="flex items-center">
+                <Button
+                  variant="ghost2"
+                  className="px-2 py-1 text-xl font-semibold"
+                  style={{ color: "#2B2B2B" }}
+                  onClick={() => handleBreadcrumbClick(index)}
+                >
+                  {segment}
+                </Button>
+                {index < pathSegments.length - 1 && (
+                  <span style={{ color: "#2B2B2B", fontSize: "1.25rem" }}>
+                    &gt;
+                  </span>
+                )}
+              </span>
+            );
+          })}
+        </div>
       </div>
 
       <div className="flex px-6">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleToggleExpand}
-        >
+        <Button variant="outline" size="sm" onClick={handleToggleExpand}>
           {expanded ? "Collapse" : "View"}
         </Button>
       </div>
