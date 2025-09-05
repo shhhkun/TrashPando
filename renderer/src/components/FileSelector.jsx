@@ -3,20 +3,19 @@ import { useState, useRef, useEffect, useCallback } from "react";
 const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
   const containerRef = useRef(null);
   const selectionRef = useRef(null);
-  const rafRef = useRef(null);
 
-  const [isSelecting, setIsSelecting] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [currentPos, setCurrentPos] = useState({ x: 0, y: 0 });
   const [isCtrlKey, setIsCtrlKey] = useState(false);
 
-  const lastMouseEventRef = useRef(null);
   const dragStartSelectionRef = useRef(new Set()); // snapshot of selection at drag start (ctrl+ drag appends to this)
   const dragAccumulatedRef = useRef(new Set()); // accumulated selection during drag (persist across scrolling)
 
   const isSelectingRef = useRef(false);
 
   const scrollStartRef = useRef(0);
+
+  const lastClickedItemRef = useRef(null);
 
   const dragThreshold = 5; // pixels to consider a drag
   const [isDragging, setIsDragging] = useState(false);
@@ -86,10 +85,6 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     // Ctrl + drag should append to existing selection, normal drag replaces
     const next = new Set(dragStartSelectionRef.current);
 
-    //frameIntersections.forEach((id) => next.add(id));
-
-    //onSelectionChange(next);
-
     frameIntersections.forEach((id) => {
       if (dragStartSelectionRef.current.has(id)) {
         // if the item was already in the initial selection, remove it
@@ -109,73 +104,49 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     }
   }, [isCtrlKey, startPos, currentPos, onSelectionChange, items, selectedIds]);
 
-  const handleMouseDown = (e) => {
-    if (e.button !== 0) return;
+  const handleMouseDown = useCallback(
+    (e) => {
+      if (e.button !== 0) return;
 
-    const item = e.target.closest("[data-selectable]");
-    const itemId = item?.dataset.id;
+      const item = e.target.closest("[data-selectable]");
+      const itemId = item?.dataset.id;
+      const isUIControl = e.target.closest("button, input, a, [data-no-clear]");
 
-    // ctrl + click toggles selection
-    if (e.ctrlKey && itemId) {
-      // synchronously compute and set so refs remain consistent
-      const newSet = new Set(selectedIds);
-      if (newSet.has(itemId)) newSet.delete(itemId);
-      else newSet.add(itemId);
-      onSelectionChange(newSet);
-      return;
-    }
-
-    // single click selects only that item
-    if (!e.ctrlKey && itemId) {
-      const file = items.find((f) => f.name === itemId);
-      if (!file || (file.isDirectory && !file.isEmptyFolder)) {
-        return; // ignore non-empty folders
+      // if the click was on an interactive UI element, do nothing
+      if (isUIControl) {
+        return;
       }
 
-      // if already selected, removed it
-      if (selectedIds.has(itemId)) {
-        const newSelection = new Set(selectedIds);
-        newSelection.delete(itemId);
-        onSelectionChange(newSelection);
-      } else {
-        // not yet selected, then select
-        onSelectionChange(new Set([itemId]));
+      // set a reference to the clicked item
+      lastClickedItemRef.current = itemId;
+
+      // set up the initial state for a potential drag
+      isSelectingRef.current = true;
+      setIsCtrlKey(e.ctrlKey);
+      setStartPos({ x: e.clientX, y: e.clientY });
+      setCurrentPos({ x: e.clientX, y: e.clientY });
+
+      // if click was on empty space (outside of FileList) with no Ctrl key, we clear the selection
+      if (!itemId && !e.ctrlKey) {
+        onSelectionChange(new Set());
       }
-      return;
-    }
 
-    if (e.target.closest("button, input, a")) return;
+      dragStartSelectionRef.current = new Set(selectedIds);
 
-    // drag select anywhere in document
-    setIsSelecting(true);
-    isSelectingRef.current = true;
-    setIsCtrlKey(e.ctrlKey);
-    setStartPos({ x: e.clientX, y: e.clientY });
-    setCurrentPos({ x: e.clientX, y: e.clientY });
+      document.body.style.userSelect = "none";
 
-    // snapshot current selection & clear accumulated for this drag
-    if (e.ctrlKey) {
-      dragStartSelectionRef.current = new Set(selectedIds); // append to existing selection
-    } else {
-      dragStartSelectionRef.current = new Set(); // non-Ctrl: start fresh
-      dragAccumulatedRef.current.clear(); // clear any old accumulated selections
-      onSelectionChange(new Set()); // also clear App state
-    }
-
-    lastMouseEventRef.current = e;
-    document.body.style.userSelect = "none";
-
-    // show the selection box immediately
-    if (selectionRef.current) {
-      Object.assign(selectionRef.current.style, {
-        left: `${e.clientX}px`,
-        top: `${e.clientY}px`,
-        width: `0px`,
-        height: `0px`,
-        display: "block",
-      });
-    }
-  };
+      if (selectionRef.current) {
+        Object.assign(selectionRef.current.style, {
+          left: `${e.clientX}px`,
+          top: `${e.clientY}px`,
+          width: `0px`,
+          height: `0px`,
+          display: "block",
+        });
+      }
+    },
+    [onSelectionChange, selectedIds]
+  );
 
   const handleMouseMove = (e) => {
     if (!isSelectingRef.current) return;
@@ -212,52 +183,51 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     updateSelection();
   };
 
-  const handleMouseUp = () => {
-    if (!isSelectingRef.current) return;
-    setIsSelecting(false);
-    isSelectingRef.current = false;
-    document.body.style.userSelect = "";
-    if (selectionRef.current) selectionRef.current.style.display = "none";
+  const handleMouseUp = useCallback(
+    (e) => {
+      if (!isSelectingRef.current) return;
 
-    // stop auto-scroll RAF
-    cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
+      if (!isDragging) {
+        if (lastClickedItemRef.current) {
+          const isAlreadySelected = selectedIds.has(lastClickedItemRef.current);
+          if (e.ctrlKey) {
+            const newSet = new Set(selectedIds);
+            if (isAlreadySelected) newSet.delete(lastClickedItemRef.current);
+            else newSet.add(lastClickedItemRef.current);
+            onSelectionChange(newSet);
+          } else {
+            if (isAlreadySelected && selectedIds.size === 1) {
+              onSelectionChange(new Set());
+            } else {
+              onSelectionChange(new Set([lastClickedItemRef.current]));
+            }
+          }
+        } else {
+          onSelectionChange(new Set());
+        }
+      }
 
-    // finalize and clear accumulation for future drags
-    dragStartSelectionRef.current = new Set();
-    dragAccumulatedRef.current.clear();
-  };
+      isSelectingRef.current = false;
+      setIsDragging(false);
+      document.body.style.userSelect = "";
+      if (selectionRef.current) selectionRef.current.style.display = "none";
 
-  const handleGlobalMouseDown = (e) => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    // ignore clicks on interactive controls anywhere
-    const isUIControl = e.target.closest("button, input, a, [data-no-clear]");
-    if (isUIControl) return;
-
-    // if click is outside container, reset *all* selection state and refs
-    if (!container.contains(e.target)) {
-      const clear = new Set();
-      onSelectionChange(clear);
-
-      // clear drag memory as well
       dragStartSelectionRef.current = new Set();
-      dragAccumulatedRef.current = new Set();
-    }
-  };
+      dragAccumulatedRef.current.clear();
+      lastClickedItemRef.current = null;
+    },
+    [isDragging, onSelectionChange, selectedIds]
+  );
 
   // global event listeners
   useEffect(() => {
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("mousedown", handleGlobalMouseDown);
     return () => {
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("mousedown", handleGlobalMouseDown);
     };
   }, [handleMouseMove, handleMouseDown, handleMouseUp]);
 
@@ -283,10 +253,7 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
   }, [updateSelection]);
 
   return (
-    <div
-      ref={containerRef}
-      //className="w-full max-w-xl h-[400px] bg-gray-800 rounded-lg p-3 overflow-y-auto space-y-2 border border-gray-600 relative"
-    >
+    <div ref={containerRef}>
       <style>{`
         .selection-box {
           position: absolute;

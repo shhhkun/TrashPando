@@ -68,7 +68,6 @@ const sortOptions = [
 export default function FileList({
   files,
   selectedFiles,
-  //toggleSelectFile,
   listRef,
   onOpenFolder,
   setFilesToDelete,
@@ -153,11 +152,6 @@ export default function FileList({
                 data-id={file.name}
                 data-name={file.name}
                 data-selectable
-                // onClick={() => {
-                //   if (!(file.isDirectory && !file.isEmptyFolder)) {
-                //     toggleSelectFile(file.name);
-                //   }
-                // }}
                 onDoubleClick={() => {
                   if (file.isDirectory) {
                     onOpenFolder(file.name);

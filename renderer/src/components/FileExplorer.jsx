@@ -97,7 +97,6 @@ export default function FileExplorer({
         {/* Select Folder Button */}
         <Button
           variant="outline"
-          className="no-drag"
           onClick={handleSelectFolder}
         >
           Select Folder
@@ -106,7 +105,6 @@ export default function FileExplorer({
         {/* Duplicate Scanner Test */}
         <Button
           variant="outline"
-          className="no-drag"
           onClick={async () => {
             if (!folderPath) return;
 
@@ -145,7 +143,6 @@ export default function FileExplorer({
         {/* Registry Scanner Test */}
         <Button
           variant="outline"
-          className="no-drag"
           onClick={async () => {
             try {
               console.log("Scanning installed apps (registry)...");
@@ -192,20 +189,6 @@ export default function FileExplorer({
             <FileList
               files={items}
               selectedFiles={selectedIds}
-              // toggleSelectFile={(fileName) => {
-              //   const item = files.find((f) => f.name === fileName);
-              //   if (!item || (item.isDirectory && !item.isEmptyFolder)) return;
-
-              //   setSelectedFiles((prev) => {
-              //     const newSet = new Set(prev);
-              //     if (newSet.has(fileName)) {
-              //       newSet.delete(fileName);
-              //     } else {
-              //       newSet.add(fileName);
-              //     }
-              //     return newSet;
-              //   });
-              // }}
               listRef={fileListRef}
               onOpenFolder={async (folderName) => {
                 const newPath = folderPath.endsWith(pathSeparator)
