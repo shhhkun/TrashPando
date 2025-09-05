@@ -21,49 +21,6 @@ const { execFile } = require("child_process");
 
 const checkDiskSpace = require("check-disk-space").default;
 
-// function extractIconFromExe(filePath) {
-//   return new Promise((resolve, reject) => {
-//     const outPath = path.join(
-//       app.getPath("temp"),
-//       `${path.basename(filePath)}.png`
-//     );
-
-//     const psCommand = `
-//       Add-Type -AssemblyName System.Drawing;
-//       $icon = [System.Drawing.Icon]::ExtractAssociatedIcon('${filePath}');
-//       if ($icon -ne $null) {
-//         $bitmap = $icon.ToBitmap();
-//         $bitmap.Save('${outPath}', [System.Drawing.Imaging.ImageFormat]::Png);
-//         Write-Output '${outPath}';
-//       }
-//     `;
-
-//     execFile(
-//       "powershell.exe",
-//       ["-NoProfile", "-Command", psCommand],
-//       { windowsHide: true },
-//       (err, stdout, stderr) => {
-//         if (err) {
-//           console.error(
-//             "[extractIconFromExe] Failed for:",
-//             filePath,
-//             stderr || err
-//           );
-//           return reject(err);
-//         }
-
-//         const output = stdout.toString().trim();
-//         if (!fs.existsSync(outPath)) {
-//           return reject(new Error("Icon not created"));
-//         }
-
-//         console.log("[extractIconFromExe] Success, cached at:", outPath);
-//         resolve(outPath);
-//       }
-//     );
-//   });
-// }
-
 function extractIconFromExe(filePathWithIndex) {
   return new Promise((resolve, reject) => {
     // split out index if present
@@ -187,9 +144,7 @@ ipcMain.handle("delete-files", async (event, filePaths) => {
   console.log("Trash (delete) request paths:", filePaths);
   try {
     for (const filePath of filePaths) {
-      if (fs.existsSync(filePath)) {
-        await shell.trashItem(filePath); // move to trash; cross-platform
-      }
+      await shell.trashItem(filePath); // move to trash; cross-platform
     }
     return { success: true };
   } catch (err) {
