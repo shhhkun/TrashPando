@@ -125,8 +125,10 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
         return;
       }
 
-      // set a reference to the clicked item
-      lastClickedItemRef.current = itemId;
+      // set a reference to the clicked item (pivot)
+      if (itemId && !e.shiftKey) {
+        lastClickedItemRef.current = itemId;
+      }
 
       // set up the initial state for a potential drag
       isSelectingRef.current = true;
@@ -196,35 +198,72 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
       if (!isSelectingRef.current) return;
 
       if (!isDragging) {
-        if (lastClickedItemRef.current) {
-          const isAlreadySelected = selectedIds.has(lastClickedItemRef.current);
-          if (e.ctrlKey) {
-            const newSet = new Set(selectedIds);
-            if (isAlreadySelected) newSet.delete(lastClickedItemRef.current);
-            else newSet.add(lastClickedItemRef.current);
-            onSelectionChange(newSet);
-          } else {
-            if (isAlreadySelected && selectedIds.size === 1) {
-              onSelectionChange(new Set());
-            } else {
-              onSelectionChange(new Set([lastClickedItemRef.current]));
-            }
-          }
-        } else {
+        const clickedItem = e.target.closest("[data-id]");
+        const clickedId = clickedItem?.dataset.id;
+
+        if (!clickedId) {
           onSelectionChange(new Set());
+        } else if (e.shiftKey) {
+          // if user does "shift +" shortcut with no pivot then set this as pivot and select it
+          if (!lastClickedItemRef.current) {
+            lastClickedItemRef.current = clickedId;
+            onSelectionChange(new Set([clickedId]));
+            return;
+          }
+
+          // get all selectable items in their current visual order
+          const visualItems = Array.from(
+            containerRef.current.querySelectorAll("[data-id]")
+          );
+
+          // find the index of the pivot and the current click in the visual list
+          const lastClickedIndex = visualItems.findIndex(
+            (item) => item.dataset.id === lastClickedItemRef.current
+          );
+          const currentClickedIndex = visualItems.findIndex(
+            (item) => item.dataset.id === clickedId
+          );
+
+          if (lastClickedIndex === -1 || currentClickedIndex === -1) {
+            return;
+          }
+
+          // create new set for selection and define start & end indices
+          const newSelection = new Set();
+          const start = Math.min(lastClickedIndex, currentClickedIndex);
+          const end = Math.max(lastClickedIndex, currentClickedIndex);
+
+          // iterate and select through our visual array of items
+          for (let i = start; i <= end; i++) {
+            newSelection.add(visualItems[i].dataset.id);
+          }
+          onSelectionChange(newSelection);
+        } else if (e.ctrlKey) {
+          // single click select/deselect for "ctrl +" shortcut
+          const newSet = new Set(selectedIds);
+          if (selectedIds.has(clickedId)) newSet.delete(clickedId);
+          else newSet.add(clickedId);
+          onSelectionChange(newSet);
+        } else {
+          // single click select/deselect
+          const isAlreadySelected = selectedIds.has(clickedId);
+          if (isAlreadySelected && selectedIds.size === 1) {
+            onSelectionChange(new Set());
+          } else {
+            onSelectionChange(new Set([clickedId]));
+          }
         }
       }
 
+      // cleanup logic
       isSelectingRef.current = false;
       setIsDragging(false);
       document.body.style.userSelect = "";
       if (selectionRef.current) selectionRef.current.style.display = "none";
 
       dragStartSelectionRef.current = new Set();
-      dragAccumulatedRef.current.clear();
-      lastClickedItemRef.current = null;
     },
-    [isDragging, onSelectionChange, selectedIds]
+    [isDragging, onSelectionChange, selectedIds, items]
   );
 
   // global event listeners
