@@ -23,9 +23,7 @@ import logo from "../assets/trashulogo.png";
 import BambooStorageBar from "./BambooStorageBar";
 
 interface TrashySidebarProps {
-  //activeItem: string | null;
   setActiveItem: (item: string | null) => void;
-  //folderPath: string;
   setFolderPath: (path: string) => void;
   commonFolders: Record<string, string>;
   used: number;
@@ -33,9 +31,7 @@ interface TrashySidebarProps {
 }
 
 const TrashySidebar: React.FC<TrashySidebarProps> = ({
-  //activeItem,
   setActiveItem,
-  //folderPath,
   setFolderPath,
   commonFolders,
   used,

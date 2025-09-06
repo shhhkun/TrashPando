@@ -24,7 +24,7 @@ function DiskUsageDiv() {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState("files"); // default: home
+  const [activeTab, setActiveTab] = useState("documents"); // default: home
 
   const [folderPath, setFolderPath] = useState(null);
   const [pathSeparator, setPathSeparator] = useState("/");
@@ -145,9 +145,7 @@ function App() {
     >
       {/* Sidebar */}
       <TrashySidebar
-        //activeItem={activeTab}
         setActiveItem={setActiveTab}
-        //folderPath={folderPath}
         setFolderPath={setFolderPath}
         commonFolders={commonFolders}
         used={used}

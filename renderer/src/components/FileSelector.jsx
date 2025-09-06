@@ -52,7 +52,15 @@ const FileSelector = ({ items, render, selectedIds, onSelectionChange }) => {
     ).filter((item) => {
       const id = item.dataset.id;
       const file = items.find((f) => f.name === id);
-      return file && !file.isDirectory; // allow only files; but empty folders are selectable via single selection
+
+      // check if the item is currently visible within the container before selecting
+      const itemRect = item.getBoundingClientRect();
+      const isItemVisible =
+        itemRect.top >= containerRect.top &&
+        itemRect.bottom <= containerRect.bottom;
+
+      // allow only files that are VISIBLE; but empty folders are selectable via single selection
+      return file && !file.isDirectory && isItemVisible;
     });
 
     const frameIntersections = []; // to store items that intersect with the selection box
